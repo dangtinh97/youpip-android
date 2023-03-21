@@ -111,6 +111,8 @@ class MainActivity : BaseActivity(),ServiceConnection {
         }
         viewPagerMain.currentItem = 1
 
+//        navigationTabBottom.selectedItemId = R.id.navigation_1
+
     }
 
     private fun setTab(tab:Int){
@@ -138,7 +140,6 @@ class MainActivity : BaseActivity(),ServiceConnection {
         playerView.visibility = View.INVISIBLE
         layoutVideo.visibility = View.GONE
         titleVideoVertical.visibility = View.GONE
-
     }
 
     private fun findViewById() {
@@ -225,7 +226,6 @@ class MainActivity : BaseActivity(),ServiceConnection {
         StrictMode.setThreadPolicy(policy)
         viewPagerMain.adapter = ViewPagerTabAdapter(supportFragmentManager, lifecycle)
         viewPagerMain.isUserInputEnabled = false //Tắt chức năng vuốt để chuyển TAB
-        navigationTabBottom.selectedItemId = R.id.navigation_1
         val displayMetrics = DisplayMetrics()
         val windowsManager = this.getSystemService(WINDOW_SERVICE) as WindowManager
         windowsManager.defaultDisplay.getMetrics(displayMetrics)
@@ -325,26 +325,26 @@ class MainActivity : BaseActivity(),ServiceConnection {
         if (isFullScreen) { // video is full screen
             titleVideo.visibility = View.GONE
             requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
-            navigationTabBottom.visibility = View.VISIBLE
-            getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
+
+            window.clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
             btnFullScreen.setBackgroundResource(R.drawable.ic_baseline_fullscreen_24)
             btnScrollToBottom.visibility = View.VISIBLE
             layoutParamPlayerView.width = widthScreen
             layoutParamPlayerView.height = widthScreen * 9 / 16
-        } else {
+        } else { // rotate video to horizontal
             layoutParamPlayerView.width = MATCH_PARENT
             layoutParamPlayerView.height = MATCH_PARENT
-            playerView.setLayoutParams(layoutParamPlayerView)
+            playerView.layoutParams = layoutParamPlayerView
             btnScrollToBottom.visibility = View.GONE
-            getWindow().setFlags(
+            window.setFlags(
                 WindowManager.LayoutParams.FLAG_FULLSCREEN,
                 WindowManager.LayoutParams.FLAG_FULLSCREEN
             );
             titleVideo.visibility = View.VISIBLE
             requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
-            navigationTabBottom.visibility = View.GONE
             btnFullScreen.setBackgroundResource(R.drawable.ic_baseline_fullscreen_exit_24)
         }
+        navigationTabBottom.visibility = View.GONE
         isFullScreen = !isFullScreen
     }
 
@@ -354,26 +354,26 @@ class MainActivity : BaseActivity(),ServiceConnection {
             println("====>set${layoutParams}")
             baseView = layoutParams
         }
-        if (videoIsSmall) {
-            navigationTabBottom.visibility = View.GONE
+        if (videoIsSmall) { // video is small
             viewActionSmallVideo.visibility = View.GONE
             binding.frameVideo.fitsSystemWindows = true
             layoutParams.height = MATCH_PARENT
             layoutParams.width = MATCH_PARENT
-            layoutVideo.setLayoutParams(layoutParams)
+            layoutVideo.layoutParams = layoutParams
             btnScrollToBottom.visibility = View.VISIBLE
             playerView.useController = true
+            navigationTabBottom.visibility = View.GONE
         } else {
-            navigationTabBottom.visibility = View.VISIBLE
             btnCloseVideo.visibility = View.VISIBLE
             layoutParams.bottomToTop = R.id.navigationTabBottom
             layoutParams.topToTop = -1
             layoutParams.height = 200
             layoutParams.width = MATCH_PARENT
-            layoutVideo.setLayoutParams(layoutParams)
+            layoutVideo.layoutParams = layoutParams
             btnScrollToBottom.visibility = View.GONE
             playerView.useController = false
             viewActionSmallVideo.visibility = View.VISIBLE
+            navigationTabBottom.visibility = View.VISIBLE
         }
         videoIsSmall = !videoIsSmall
     }
