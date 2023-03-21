@@ -23,4 +23,12 @@
         <item name="android:windowTranslucentNavigation">true</item>
         <item name="font">@font/montserrat_medium</item>
     </style>
+
+    <style name="CornerCut" parent="">
+        <item name="cornerSizeTopLeft">15dp</item>
+        <item name="cornerSizeTopRight">15dp</item>
+        <item name="cornerSizeBottomLeft">15dp</item>
+        <item name="cornerSizeBottomRight">15dp</item>
+
+    </style>
 </resources>

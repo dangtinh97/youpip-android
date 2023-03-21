@@ -1,9 +1,12 @@
 package org.youpip.app.views.activity
 
+import android.content.Intent
+import com.google.gson.internal.LinkedTreeMap
+import org.youpip.app.MainActivity
 import org.youpip.app.base.BaseActivity
 import org.youpip.app.databinding.ActivitySplashBinding
 import org.youpip.app.network.RequiresApi
-import org.youpip.app.network.RequiresApi.Companion.callApi
+
 
 class SplashActivity : BaseActivity() {
     private lateinit var binding: ActivitySplashBinding
@@ -14,13 +17,22 @@ class SplashActivity : BaseActivity() {
     }
 
     override fun onCreateBase() {
-        val home = callApi.home("")
-        RequiresApi.callApi(this,home){
-            if(it===null){
-                println("====>${it}")
+        var username = mySharePre.getString("username")
+        if(username==null){
+            username = ""
+        }
+        val login = callApi.login(username.toString())
+        RequiresApi.callApi(this, login) {
+            if (it === null) {
                 return@callApi
             }
-            println("====>${it}")
+            val data = it.data as LinkedTreeMap<*, *>
+            val token = data.get("token").toString()
+            mySharePre.saveString("token", "Bearer $token")
+            mySharePre.saveString("username",data.get("username").toString())
+            val myIntent = Intent(this, MainActivity::class.java)
+            startActivity(myIntent)
+            finish()
         }
     }
 

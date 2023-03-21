@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:background="@color/black"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="@dimen/_12sdp"
+    tools:context=".views.fragment.search.SuggestFragment">
+    <TextView
+        android:id="@+id/text_1"
+        android:textSize="16sp"
+        android:fontFamily="@font/montserrat_bold"
+        android:textColor="@color/primary"
+        android:text="Ở đây có tất cả mọi thứ."
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"/>
+    <LinearLayout
+        android:id="@+id/f_search"
+        android:layout_marginTop="@dimen/_10sdp"
+        android:layout_below="@+id/text_1"
+        android:layout_width="match_parent"
+        android:background="@drawable/radius_30_white"
+        android:layout_height="wrap_content">
+        <EditText
+            android:id="@+id/ip_search"
+            android:imeOptions="actionSearch"
+            android:inputType="text"
+            android:textFontWeight="600"
+            android:textColor="@color/primary"
+            android:layout_marginStart="@dimen/_4sdp"
+            android:gravity="center_vertical"
+            android:paddingVertical="4dp"
+            android:background="@null"
+            android:layout_weight="1"
+            android:hint="Bạn muốn tìm gì?"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"/>
+        <ImageView
+            android:paddingHorizontal="4dp"
+            android:layout_gravity="center_vertical"
+            android:textColor="@color/primary"
+            android:src="@drawable/ic_baseline_search_24"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+    </LinearLayout>
+    <androidx.recyclerview.widget.RecyclerView
+        android:paddingHorizontal="@dimen/_8sdp"
+        android:layout_marginTop="@dimen/_14sdp"
+        android:layout_below="@+id/f_search"
+        android:id="@+id/v_search"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"/>
+</RelativeLayout>

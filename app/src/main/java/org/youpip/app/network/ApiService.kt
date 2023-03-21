@@ -6,18 +6,41 @@ import org.youpip.app.model.BaseApi
 import retrofit2.Retrofit
 import retrofit2.adapter.rxjava3.RxJava3CallAdapterFactory
 import retrofit2.converter.gson.GsonConverterFactory
-import retrofit2.http.GET
-import retrofit2.http.Query
 import io.reactivex.rxjava3.core.Observable
+import retrofit2.http.*
 import java.util.concurrent.TimeUnit
 
 const val TIME_REQUEST: Long = 100
 const val BASE_URL = "http://54.254.11.130/api/"
 interface ApiService {
 
+    @FormUrlEncoded
+    @POST("login")
+    fun login(
+        @Field("username") username: String
+    ): Observable<BaseApi<Any>>
+
     @GET("youtube/new")
     fun home(
-        @Query("token") token:String
+        @Header("Authorization") token: String,
+    ): Observable<BaseApi<Any>>
+
+    @GET("youtube/search")
+    fun search(
+        @Header("Authorization") token: String,
+        @Query("q") q:String
+    ): Observable<BaseApi<Any>>
+
+    @GET("youtube/link-video")
+    fun findLink(
+        @Header("Authorization") token: String,
+        @Query("video-id") videoId:String
+    ): Observable<BaseApi<Any>>
+
+    @GET("youtube/suggest")
+    fun suggest(
+        @Header("Authorization") token: String,
+        @Query("keyword") keyword:String
     ): Observable<BaseApi<Any>>
 
     companion object{
