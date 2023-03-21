@@ -9,12 +9,13 @@ import org.youpip.app.network.ApiService
 import org.youpip.app.utils.MySharePre
 import java.util.Observable
 import javax.security.auth.callback.Callback
+import kotlin.system.exitProcess
 
 abstract class BaseActivity:AppCompatActivity() {
     lateinit var mySharePre: MySharePre
     val callApi: ApiService by lazy { ApiService.getClient() }
     lateinit var token:String
-
+    private var time:Long = 0;
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         mySharePre = MySharePre(this)
@@ -36,5 +37,16 @@ abstract class BaseActivity:AppCompatActivity() {
 
     fun alert(str:String){
         Toast.makeText(this,str,Toast.LENGTH_SHORT).show()
+    }
+
+    override fun onBackPressed() {
+        val timeMilli: Long = System.currentTimeMillis()
+        if(timeMilli-time<1500){
+            finishAndRemoveTask();
+            exitProcess(0)
+        }
+        time = timeMilli
+        alert("Nhấn lần nữa để thoát!")
+        return
     }
 }

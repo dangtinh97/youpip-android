@@ -71,8 +71,6 @@ class MainActivity : BaseActivity(),ServiceConnection {
     private lateinit var btnCloseVideo: ImageView
     private lateinit var titleVideoSmall:TextView
     private var  permissionPiP:Boolean = false
-    private var isPiP:Boolean = false
-    private var time:Long = 0;
     private var tabCurrent:Int = 0
     private var listVideo = emptyList<Video>()
     private lateinit var video:Video
@@ -187,6 +185,7 @@ class MainActivity : BaseActivity(),ServiceConnection {
             val data = it.data as LinkedTreeMap<*, *>
             val url = data["url"].toString()
             val mediaItem: MediaItem = MediaItem.fromUri(url)
+
             player.setMediaItem(mediaItem)
             player.prepare()
             player.play()
@@ -219,7 +218,6 @@ class MainActivity : BaseActivity(),ServiceConnection {
         if (show && url.equals(null)) {
             progressBarVideoVertical.visibility = View.VISIBLE
         }
-
     }
 
     override fun onCreateBase() {
@@ -241,6 +239,7 @@ class MainActivity : BaseActivity(),ServiceConnection {
     }
 
     private fun onCreateBaseVideo() {
+        player = ExoPlayer.Builder(this).build()
         //set ratio of image thumbnail 16:9 = w:h
         val layoutParamThumbnail: ViewGroup.LayoutParams = thumbnailVideo.getLayoutParams()
         layoutParamThumbnail.width = widthScreen
@@ -255,14 +254,10 @@ class MainActivity : BaseActivity(),ServiceConnection {
             isPlay = false
             player.stop()
             layoutVideo.visibility = View.GONE
-            // This is the id from displayNotification(..) called from your NotificationExtenderService.
-
         }
-        player = ExoPlayer.Builder(this).build()
         btnAddList.setOnClickListener {
             showBottomSheet()
         }
-
         handlerActionPlayer()
         val filter = IntentFilter()
         filter.addAction(ACTION_PIP_CONTROL)
@@ -395,17 +390,6 @@ class MainActivity : BaseActivity(),ServiceConnection {
         enterPictureInPictureMode(paramsPiP.build())
     }
 
-    override fun onBackPressed() {
-        val timeMilli: Long = System.currentTimeMillis()
-        if(timeMilli-time<1500){
-            finishAndRemoveTask();
-            exitProcess(0)
-        }
-        time = timeMilli
-        alert("Nhấn lần nữa để thoát!")
-        return
-    }
-
     override fun onPictureInPictureModeChanged(
         isInPictureInPictureMode: Boolean,
         newConfig: Configuration
@@ -413,18 +397,16 @@ class MainActivity : BaseActivity(),ServiceConnection {
         modePiPEnable = isInPictureInPictureMode
         bottomSheetDialog?.dismiss()
         if (lifecycle.currentState == Lifecycle.State.CREATED) {
-            //click on close
+            playerView.useController = true
         }
         else if (lifecycle.currentState == Lifecycle.State.STARTED){
+            navigationTabBottom.visibility = View.GONE
             if (isInPictureInPictureMode) {
-                isPiP = true
                 btnCloseVideo.visibility = View.GONE
                 playerView.useController = false
             }else{
                 playerView.useController = true
-                navigationTabBottom.visibility = View.VISIBLE
             }
-            navigationTabBottom.visibility = View.GONE
         }
         super.onPictureInPictureModeChanged(isInPictureInPictureMode, newConfig)
     }
@@ -517,13 +499,13 @@ class MainActivity : BaseActivity(),ServiceConnection {
             }
         }
     }
+
     private fun exitApp(){
         stopService(Intent(this, MusicService::class.java))
         player.stop()
         finishAndRemoveTask()
         exitProcess(0)
     }
-
 
     private fun buildPip() {
         val actions = arrayListOf<RemoteAction>()
