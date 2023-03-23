@@ -9,16 +9,19 @@ import android.content.res.Configuration
 import android.graphics.drawable.Icon
 import android.os.IBinder
 import android.os.StrictMode
+import android.transition.ChangeBounds
+import android.transition.Fade
+import android.transition.Transition
+import android.transition.TransitionManager
 import android.util.DisplayMetrics
 import android.view.*
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import android.view.inputmethod.InputMethodManager
-import android.widget.EditText
-import android.widget.ImageView
-import android.widget.RelativeLayout
-import android.widget.TextView
+import android.widget.*
 import androidx.constraintlayout.widget.ConstraintLayout.LayoutParams
 import androidx.lifecycle.Lifecycle
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.widget.ViewPager2
 import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.MediaItem
@@ -29,6 +32,7 @@ import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.gson.internal.LinkedTreeMap
 import com.squareup.picasso.Picasso
+import org.youpip.app.adapter.ItemVideoMoreAdapter
 import org.youpip.app.adapter.ViewPagerTabAdapter
 import org.youpip.app.base.BaseActivity
 import org.youpip.app.databinding.ActivityMainBinding
@@ -38,6 +42,7 @@ import org.youpip.app.service.MusicService
 import java.util.*
 import kotlin.system.exitProcess
 
+
 private const val ACTION_PIP_CONTROL = "pip_control"
 private const val CONTROL_TYPE = "control_type"
 private const val CONTROL_TYPE_EXIT = "exit"
@@ -46,7 +51,7 @@ private const val CONTROL_TYPE_PAUSE = "pause"
 
 class MainActivity : BaseActivity(),ServiceConnection {
     private lateinit var binding: ActivityMainBinding
-    private lateinit var navigationTabBottom: BottomNavigationView
+    public lateinit var navigationTabBottom: BottomNavigationView
     private lateinit var viewPagerMain: ViewPager2
     private var positionTab: Int? = null
 
@@ -78,12 +83,18 @@ class MainActivity : BaseActivity(),ServiceConnection {
     private var bottomSheetDialog: BottomSheetDialog? = null
     private var paramsPiP= PictureInPictureParams.Builder()
 
+    //
+    private lateinit var recyclerView: RecyclerView
+    private lateinit var adapter: ItemVideoMoreAdapter
+    lateinit var btnOnlyAudio:ImageView
+
     companion object {
         var videoP:Video? = null
         var musicService: MusicService? = null
         var modePiPEnable:Boolean = false
         var newConfigMode:Configuration? = null
         lateinit var player: ExoPlayer
+        var currentPositionMedia:Int = 0
     }
 
     override fun setViewBinding() {
@@ -103,7 +114,7 @@ class MainActivity : BaseActivity(),ServiceConnection {
             when (menuItem.itemId) {
                 R.id.navigation_1 -> setTab(0)
                 R.id.navigation_2 -> setTab(1)
-//                R.id.navigation_3 -> setTab(2)
+                R.id.navigation_3 -> setTab(2)
 //                R.id.navigation_4 -> setTab(3)
 //                R.id.navigation_5 -> setTab(5)
             }
@@ -111,8 +122,10 @@ class MainActivity : BaseActivity(),ServiceConnection {
         }
         viewPagerMain.currentItem = 1
 
-//        navigationTabBottom.selectedItemId = R.id.navigation_1
-
+        recyclerView = binding.sameVideo
+        recyclerView.suppressLayout(true)
+        customRecyclerView()
+        navigationTabBottom.selectedItemId = R.id.navigation_1
     }
 
     private fun setTab(tab:Int){
@@ -133,6 +146,7 @@ class MainActivity : BaseActivity(),ServiceConnection {
         btnCloseVideo = binding.closeVideoSmall
         titleVideoSmall = binding.titleVideoSmall
         btnAddList = binding.addList
+        btnOnlyAudio =  binding.onlyAudio
 
         viewActionSmallVideo.visibility = View.GONE
         progressBarVideoVertical.visibility = View.GONE
@@ -140,6 +154,8 @@ class MainActivity : BaseActivity(),ServiceConnection {
         playerView.visibility = View.INVISIBLE
         layoutVideo.visibility = View.GONE
         titleVideoVertical.visibility = View.GONE
+
+
     }
 
     private fun findViewById() {
@@ -160,12 +176,13 @@ class MainActivity : BaseActivity(),ServiceConnection {
         }
     }
 
+
     fun playVideo(videoPlay: Video? = null) {
         permissionPiP = false
         videoStart = false
         playerView.visibility = View.INVISIBLE
         titleVideoVertical.visibility = View.VISIBLE
-        navigationTabBottom.visibility = View.GONE
+        showNavigationBottom(false)
         setLayoutParamFullScreen()
         if (videoIsSmall) {
             smallVideo()
@@ -174,23 +191,30 @@ class MainActivity : BaseActivity(),ServiceConnection {
         if(videoPlay==null){
             return
         }
+        currentPositionMedia = 0
+        apiDetailVideo(videoPlay.video_id) { it
+            val url= it
+            val mediaItem: MediaItem = MediaItem.fromUri(url)
+            player.setMediaItem(mediaItem)
+            player.prepare()
+            player.play()
+            playerView.player = player
+        }
         video = videoPlay
         videoP = video
-
+        suggestByVideoId(videoPlay.video_id)
         setInfo(video)
-        val api = callApi.findLink(token,video.video_id)
+    }
+
+    private fun apiDetailVideo(videoId:String,callback:(String) -> Unit){
+        val api = callApi.findLink(token,videoId)
         RequiresApi.callApi(this,api){
             if(it==null || !it.status.equals(200)){
                 return@callApi
             }
             val data = it.data as LinkedTreeMap<*, *>
             val url = data["url"].toString()
-            val mediaItem: MediaItem = MediaItem.fromUri(url)
-
-            player.setMediaItem(mediaItem)
-            player.prepare()
-            player.play()
-            playerView.player = player
+            callback(url)
         }
     }
 
@@ -198,7 +222,7 @@ class MainActivity : BaseActivity(),ServiceConnection {
         val layoutParamVideo = layoutVideo.layoutParams as LayoutParams
         layoutParamVideo.width = LayoutParams.MATCH_PARENT
         layoutParamVideo.height = LayoutParams.MATCH_PARENT
-        layoutVideo.setLayoutParams(layoutParamVideo)
+        layoutVideo.layoutParams = layoutParamVideo
         layoutVideo.visibility = View.VISIBLE
     }
 
@@ -262,54 +286,87 @@ class MainActivity : BaseActivity(),ServiceConnection {
         val filter = IntentFilter()
         filter.addAction(ACTION_PIP_CONTROL)
         registerReceiver(broadcastReceiver, filter)
+        player.repeatMode = Player.REPEAT_MODE_ALL
+        btnOnlyAudio.setOnClickListener {
+            permissionPiP = false
+            val startMain = Intent(Intent.ACTION_MAIN)
+            startMain.addCategory(Intent.CATEGORY_HOME)
+            startMain.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+            startActivity(startMain)
+        }
     }
 
     private fun handlerActionPlayer(){
         player.addListener(object : Player.Listener {
             override fun onPlayWhenReadyChanged(playWhenReady: Boolean, reason: Int) {
-                permissionPiP = playWhenReady
+                println("====>=onPlayWhenReadyChanged:${playWhenReady}")
                 super.onPlayWhenReadyChanged(playWhenReady, reason)
             }
 
             @Deprecated("Deprecated in Java")
             override fun onPlayerStateChanged(playWhenReady: Boolean, playbackState: Int) {
-                println("====>listen-onPlayerStateChanged:${playWhenReady}")
-
+                println("====>=onPlayerStateChanged:${playWhenReady}")
+                playerView.visibility = View.VISIBLE
                 if(playWhenReady!=isPlay && modePiPEnable){
-                    println("====>listen")
                     isPlay = playWhenReady
                     buildPip()
                 }
                 isPlay = playWhenReady
-                permissionPiP = playWhenReady
-                musicService!!.showNotification(playWhenReady)
-                if (playWhenReady && !videoStart) {
-                    videoStart = true
-                    delay(1) {
-                        loadImage(null, false)
-                        playerView.visibility = View.VISIBLE
-                    }
-                }
                 super.onPlayerStateChanged(playWhenReady, playbackState)
             }
 
             override fun onIsLoadingChanged(isLoading: Boolean) {
-                println("====>listen-onIsLoadingChanged:${isLoading}")
                 super.onIsLoadingChanged(isLoading)
+                println("====>=onIsLoadingChanged:${isLoading}")
+                if(!isLoading){
+                    loadImage(null, false)
+                }
             }
 
             @Deprecated("Deprecated in Java")
             override fun onLoadingChanged(isLoading: Boolean) {
-                println("====>listen-onLoadingChanged:${isLoading}")
+                println("====>=listen-onLoadingChanged:${isLoading}")
                 super.onLoadingChanged(isLoading)
             }
 
             override fun onPlayerErrorChanged(error: PlaybackException?) {
-                println("====>listen-onPlayerErrorChanged:${error?.message}")
+                println("====>=onPlayerErrorChanged")
                 permissionPiP = false
+                musicService!!.showNotification(false)
+                loadImage(null, true)
                 super.onPlayerErrorChanged(error)
             }
+
+            override fun onIsPlayingChanged(isPlaying: Boolean) {
+                super.onIsPlayingChanged(isPlaying)
+                musicService!!.showNotification(isPlaying)
+                permissionPiP = isPlaying
+                if(isPlaying && !isPlay){
+                    loadImage(null, false)
+                }
+                isPlay = isPlaying
+                println("====>=onIsPlayingChanged:${isPlaying}")
+            }
+
+            override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
+                super.onMediaItemTransition(mediaItem, reason)
+                if(currentPositionMedia>0){
+                    println("====>=onMediaItemTransition:${mediaItem?.mediaId}")
+                    val current:Int? = (mediaItem?.mediaId)?.toInt()
+                    if(current != null){
+                        video = listVideo[current]
+                        setInfo(video)
+                        videoP = video
+                        addNextVideo()
+                    }
+                }
+                delay(1000){
+                    loadImage(null, false)
+                }
+
+            }
         })
+
     }
 
     fun progressBar(show: Boolean) {
@@ -344,7 +401,7 @@ class MainActivity : BaseActivity(),ServiceConnection {
             requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
             btnFullScreen.setBackgroundResource(R.drawable.ic_baseline_fullscreen_exit_24)
         }
-        navigationTabBottom.visibility = View.GONE
+        showNavigationBottom(false)
         isFullScreen = !isFullScreen
     }
 
@@ -362,7 +419,7 @@ class MainActivity : BaseActivity(),ServiceConnection {
             layoutVideo.layoutParams = layoutParams
             btnScrollToBottom.visibility = View.VISIBLE
             playerView.useController = true
-            navigationTabBottom.visibility = View.GONE
+            showNavigationBottom(false)
         } else {
             btnCloseVideo.visibility = View.VISIBLE
             layoutParams.bottomToTop = R.id.navigationTabBottom
@@ -373,7 +430,7 @@ class MainActivity : BaseActivity(),ServiceConnection {
             btnScrollToBottom.visibility = View.GONE
             playerView.useController = false
             viewActionSmallVideo.visibility = View.VISIBLE
-            navigationTabBottom.visibility = View.VISIBLE
+            showNavigationBottom(true)
         }
         videoIsSmall = !videoIsSmall
     }
@@ -400,7 +457,7 @@ class MainActivity : BaseActivity(),ServiceConnection {
             playerView.useController = true
         }
         else if (lifecycle.currentState == Lifecycle.State.STARTED){
-            navigationTabBottom.visibility = View.GONE
+            showNavigationBottom(false)
             if (isInPictureInPictureMode) {
                 btnCloseVideo.visibility = View.GONE
                 playerView.useController = false
@@ -507,6 +564,13 @@ class MainActivity : BaseActivity(),ServiceConnection {
         exitProcess(0)
     }
 
+    override fun onResume() {
+        super.onResume()
+        if(player.isPlaying){
+            permissionPiP = true
+        }
+    }
+
     private fun buildPip() {
         val actions = arrayListOf<RemoteAction>()
 
@@ -541,5 +605,66 @@ class MainActivity : BaseActivity(),ServiceConnection {
         val playPendingIntent = getBroadcast(this, resId, playActionIntent, FLAG_IMMUTABLE)
         val playIcon = Icon.createWithResource(this, resId)
         return RemoteAction(playIcon, "Info${controlType}", "Video Info${controlType}", playPendingIntent);
+    }
+
+    private fun suggestByVideoId(videoId:String){
+        val api = callApi.suggestByVideoId(token,videoId)
+        RequiresApi.callApi(this,api){
+            if(it==null || it.status != 200){
+                return@callApi
+            }
+            val data = it.data as LinkedTreeMap<*, *>
+            val list = data.get("list") as ArrayList<*>
+            val dataItems = arrayListOf<Video>()
+            list.forEach { item->
+                item as LinkedTreeMap<*, *>
+                dataItems.add(
+                    Video(
+                        item.get("video_id").toString(),
+                        item.get("title").toString(),
+                        item.get("thumbnail").toString(),
+                        item.get("published_time").toString(),
+                        item.get("view_count_text").toString(),
+                        item.get("chanel_name").toString(),
+                        item.get("chanel_url").toString(),
+                        item.get("time_text").toString(),
+                    )
+                )
+            }
+            listVideo = dataItems
+            adapter.setData(dataItems)
+            addNextVideo()
+        }
+    }
+    private fun customRecyclerView(){
+        val layoutManager = LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false)
+        adapter = ItemVideoMoreAdapter{
+            playVideo(it)
+        }
+        recyclerView.layoutManager = layoutManager
+        recyclerView.adapter = adapter
+    }
+
+    private fun addNextVideo(){
+        if(listVideo.size > currentPositionMedia){
+            apiDetailVideo(listVideo[currentPositionMedia].video_id){
+                val mediaItem: MediaItem =
+                    MediaItem.Builder().setUri(it).setMediaId(currentPositionMedia.toString()).build()
+                player.addMediaItem(mediaItem)
+                player.prepare()
+                currentPositionMedia++
+            }
+        }
+    }
+
+    fun showNavigationBottom(show:Boolean){
+        val transition = ChangeBounds()
+        transition.duration = 5000
+        TransitionManager.beginDelayedTransition(navigationTabBottom)
+        if(show){
+            navigationTabBottom.visibility = View.VISIBLE
+        }else{
+            navigationTabBottom.visibility = View.GONE
+        }
     }
 }

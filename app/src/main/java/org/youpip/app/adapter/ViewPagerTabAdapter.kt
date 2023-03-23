@@ -6,6 +6,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.viewpager2.adapter.FragmentStateAdapter
 import org.youpip.app.views.fragment.home.BaseHomeFragment
 import org.youpip.app.views.fragment.search.BaseSearchFragment
+import org.youpip.app.views.fragment.social.BaseSocialFragment
 
 private const val NUMBER_TAB = 4;
 class ViewPagerTabAdapter(fragmentManager:FragmentManager, lifecycle: Lifecycle):
@@ -19,6 +20,7 @@ FragmentStateAdapter(fragmentManager,lifecycle){
         when(position){
             0 -> return BaseHomeFragment()
             1 -> return BaseSearchFragment()
+            2 -> return BaseSocialFragment()
         }
         return BaseHomeFragment()
     }

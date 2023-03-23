@@ -2,6 +2,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_gravity="bottom"
     android:layoutDirection="ltr"
     android:background="#99000000"
@@ -36,7 +37,12 @@
         <ImageButton android:id="@id/exo_play"
             style="@style/ExoMediaButton.Play"/>
         <ImageButton android:id="@id/exo_pause"
-            style="@style/ExoMediaButton.Pause"/>
+            style="@style/ExoMediaButton.Pause" />
+        <ImageButton
+            android:id="@+id/exo_next"
+            style="@style/ExoMediaButton.Next"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
     </LinearLayout>
     <LinearLayout
         android:orientation="vertical"
@@ -95,6 +101,7 @@
         <com.google.android.exoplayer2.ui.DefaultTimeBar
             android:id="@+id/exo_progress"
             android:layout_gravity="start"
+            app:played_color="@color/primary"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"/>
 

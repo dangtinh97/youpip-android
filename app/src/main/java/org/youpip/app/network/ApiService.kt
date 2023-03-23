@@ -43,6 +43,12 @@ interface ApiService {
         @Query("keyword") keyword:String
     ): Observable<BaseApi<Any>>
 
+    @GET("youtube/suggest-by-video-id")
+    fun suggestByVideoId(
+        @Header("Authorization") token: String,
+        @Query("video-id") videoId :String
+    ): Observable<BaseApi<Any>>
+
     companion object{
         private val gson = GsonBuilder().setLenient().create()
         private var headerInterceptor:HeaderInterceptor = HeaderInterceptor()
