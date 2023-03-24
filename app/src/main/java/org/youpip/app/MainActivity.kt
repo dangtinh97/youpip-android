@@ -154,8 +154,6 @@ class MainActivity : BaseActivity(),ServiceConnection {
         playerView.visibility = View.INVISIBLE
         layoutVideo.visibility = View.GONE
         titleVideoVertical.visibility = View.GONE
-
-
     }
 
     private fun findViewById() {
@@ -411,6 +409,8 @@ class MainActivity : BaseActivity(),ServiceConnection {
             println("====>set${layoutParams}")
             baseView = layoutParams
         }
+        val transition = ChangeBounds()
+        TransitionManager.beginDelayedTransition(layoutVideo,transition)
         if (videoIsSmall) { // video is small
             viewActionSmallVideo.visibility = View.GONE
             binding.frameVideo.fitsSystemWindows = true
@@ -430,7 +430,9 @@ class MainActivity : BaseActivity(),ServiceConnection {
             btnScrollToBottom.visibility = View.GONE
             playerView.useController = false
             viewActionSmallVideo.visibility = View.VISIBLE
-            showNavigationBottom(true)
+            if(tabCurrent!=2){
+                showNavigationBottom(true)
+            }
         }
         videoIsSmall = !videoIsSmall
     }
@@ -659,8 +661,7 @@ class MainActivity : BaseActivity(),ServiceConnection {
 
     fun showNavigationBottom(show:Boolean){
         val transition = ChangeBounds()
-        transition.duration = 5000
-        TransitionManager.beginDelayedTransition(navigationTabBottom)
+        TransitionManager.beginDelayedTransition(navigationTabBottom,transition)
         if(show){
             navigationTabBottom.visibility = View.VISIBLE
         }else{
