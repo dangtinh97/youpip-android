@@ -3,16 +3,79 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/gray"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     tools:context=".views.fragment.social.FeedFragment">
     <androidx.appcompat.widget.Toolbar
-        android:id="@+id/toolBar"
+        android:visibility="gone"
         app:titleTextColor="@color/white"
         android:background="@color/primary"
-        app:title="@string/default_label"
+        app:title="@string/community"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
-
     </androidx.appcompat.widget.Toolbar>
+    <RelativeLayout
+        android:paddingVertical="@dimen/_12sdp"
+        android:background="@color/primary"
+        android:orientation="horizontal"
+        android:id="@+id/toolBar"
+        android:paddingHorizontal="@dimen/_12sdp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <ImageView
+            android:id="@+id/btn_add_post"
+            android:layout_alignParentStart="true"
+            android:src="@drawable/ic_baseline_post_add_24"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+        <ImageView
+            android:id="@+id/list_chat"
+            android:layout_alignParentEnd="true"
+            android:src="@drawable/ic_chat_cp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:contentDescription="CHAT" />
+
+    </RelativeLayout>
+    <RelativeLayout
+        android:visibility="gone"
+        android:id="@+id/layout_refresh"
+        android:padding="8dp"
+        android:elevation="1dp"
+        android:gravity="center"
+        android:layout_below="@+id/toolBar"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+        <TextView
+            android:id="@+id/no_post"
+            android:gravity="center"
+            android:textSize="@dimen/_24sdp"
+            android:fontFamily="@font/montserrat_bold"
+            android:textColor="@color/gray_10"
+            android:text="Bạn đã xem hết các bài viết!"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+        <com.google.android.material.button.MaterialButton
+            app:iconGravity="textStart"
+            app:iconTint="@color/black"
+            app:icon="@drawable/ic_baseline_refresh_24"
+            android:textColor="@color/black"
+            android:textAllCaps="false"
+            android:text="Làm mới"
+            android:layout_below="@+id/no_post"
+            android:id="@+id/refresh"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+    </RelativeLayout>
+    <com.yuyakaido.android.cardstackview.CardStackView
+        android:layout_below="@+id/toolBar"
+        android:id="@+id/card_stack_view"
+        tools:listitem="@layout/item_post"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:padding="4dp"
+        android:layout_centerInParent="true"
+        android:clipToPadding="false">
+    </com.yuyakaido.android.cardstackview.CardStackView>
 
 </RelativeLayout>

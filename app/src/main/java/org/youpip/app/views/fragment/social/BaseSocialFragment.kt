@@ -15,11 +15,12 @@ import org.youpip.app.databinding.FragmentBaseSocialBinding
 class BaseSocialFragment : BaseFragment() {
     private lateinit var binding: FragmentBaseSocialBinding
     override fun onViewCreateBase(view: View, savedInstanceState: Bundle?) {
+
     }
 
     override fun onInitialized() {
         showNextNoAddStack(FeedFragment())
-        (mActivity as MainActivity).showNavigationBottom(false)
+
     }
 
     override fun onCreateView(
@@ -34,6 +35,5 @@ class BaseSocialFragment : BaseFragment() {
 
     override fun onResume() {
         super.onResume()
-        (mActivity as MainActivity).showNavigationBottom(false)
     }
 }

@@ -10,10 +10,9 @@ import android.graphics.drawable.Icon
 import android.os.IBinder
 import android.os.StrictMode
 import android.transition.ChangeBounds
-import android.transition.Fade
-import android.transition.Transition
 import android.transition.TransitionManager
 import android.util.DisplayMetrics
+import android.util.Log
 import android.view.*
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import android.view.inputmethod.InputMethodManager
@@ -81,7 +80,8 @@ class MainActivity : BaseActivity(),ServiceConnection {
     private lateinit var video:Video
     private lateinit var btnAddList:ImageView
     private var bottomSheetDialog: BottomSheetDialog? = null
-    private var paramsPiP= PictureInPictureParams.Builder()
+    private var paramsPiP = PictureInPictureParams.Builder()
+    private lateinit var btnHideVideo:ImageView
 
     //
     private lateinit var recyclerView: RecyclerView
@@ -101,7 +101,7 @@ class MainActivity : BaseActivity(),ServiceConnection {
         binding = ActivityMainBinding.inflate(layoutInflater)
         navigationTabBottom = binding.navigationTabBottom
         viewPagerMain = binding.viewPagerMain
-        viewPagerMain.offscreenPageLimit = 1
+//        viewPagerMain.offscreenPageLimit = 1
         setContentView(binding.root)
         setViewVideoBinding()
         val displayMetrics = DisplayMetrics()
@@ -132,8 +132,21 @@ class MainActivity : BaseActivity(),ServiceConnection {
         if(tab == tabCurrent){
             return
         }
+        showNavigationBottom(true)
         tabCurrent = tab
         viewPagerMain.currentItem = tab
+
+        if(player.isPlaying){
+            permissionPiP = true
+            if(tab == 2){
+                permissionPiP = false
+                layoutVideo.visibility = View.GONE
+            }else{
+                layoutVideo.visibility = View.VISIBLE
+            }
+        }
+
+
     }
 
     private fun setViewVideoBinding() {
@@ -147,6 +160,7 @@ class MainActivity : BaseActivity(),ServiceConnection {
         titleVideoSmall = binding.titleVideoSmall
         btnAddList = binding.addList
         btnOnlyAudio =  binding.onlyAudio
+        btnHideVideo = binding.hideVideo
 
         viewActionSmallVideo.visibility = View.GONE
         progressBarVideoVertical.visibility = View.GONE
@@ -311,6 +325,23 @@ class MainActivity : BaseActivity(),ServiceConnection {
                 }
                 isPlay = playWhenReady
                 super.onPlayerStateChanged(playWhenReady, playbackState)
+
+                when (playbackState) {
+                    Player.STATE_ENDED -> {
+                        Log.i("EventListenerState", "Playback ended!")
+                        player.playWhenReady = false
+                    }
+                    Player.STATE_READY -> {
+                        Log.i("EventListenerState", "Playback State Ready!")
+                        loadImage(null, false)
+                    }
+                    Player.STATE_BUFFERING -> {
+                        Log.i("EventListenerState", "Playback buffering")
+                        loadImage(null, true)
+                    }
+                    Player.STATE_IDLE -> {}
+                }
+
             }
 
             override fun onIsLoadingChanged(isLoading: Boolean) {
@@ -430,9 +461,7 @@ class MainActivity : BaseActivity(),ServiceConnection {
             btnScrollToBottom.visibility = View.GONE
             playerView.useController = false
             viewActionSmallVideo.visibility = View.VISIBLE
-            if(tabCurrent!=2){
-                showNavigationBottom(true)
-            }
+            showNavigationBottom(true)
         }
         videoIsSmall = !videoIsSmall
     }
@@ -498,7 +527,7 @@ class MainActivity : BaseActivity(),ServiceConnection {
         }
     }
 
-    private fun showKeyboard(isShow: Boolean = false) {
+    fun showKeyboard(isShow: Boolean = false) {
         val view = this.currentFocus
         if (view === null) {
             return
@@ -568,8 +597,9 @@ class MainActivity : BaseActivity(),ServiceConnection {
 
     override fun onResume() {
         super.onResume()
-        if(player.isPlaying){
+        if(player.isPlaying && tabCurrent!=2){
             permissionPiP = true
+
         }
     }
 
@@ -668,4 +698,5 @@ class MainActivity : BaseActivity(),ServiceConnection {
             navigationTabBottom.visibility = View.GONE
         }
     }
+
 }

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="horizontal"
+    android:layout_width="match_parent"
+    android:layout_marginBottom="@dimen/_12sdp"
+    android:layout_height="wrap_content">
+    <de.hdodenhof.circleimageview.CircleImageView
+        android:src="@drawable/doquynh"
+        android:layout_width="48dp"
+        android:layout_height="48dp"/>
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_marginStart="@dimen/_8sdp"
+        android:padding="@dimen/_8sdp"
+        android:background="@drawable/radius_input_comment"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <TextView
+            android:layout_marginBottom="@dimen/_4sdp"
+            android:textColor="@color/white"
+            android:fontFamily="@font/montserrat_bold"
+            android:text="@string/default_label"
+            android:id="@+id/full_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+        <TextView
+            android:text="Công sức bỏ ra không xứng đáng, Thế hệ Z thích nhảy việc"
+            android:textColor="@color/white"
+            android:id="@+id/content"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+    </LinearLayout>
+</LinearLayout>

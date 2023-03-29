@@ -3,20 +3,23 @@ package org.youpip.app.views.fragment.search
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
+import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.inputmethod.EditorInfo
 import android.widget.TextView
+import android.widget.TextView.OnEditorActionListener
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.gson.internal.LinkedTreeMap
 import org.youpip.app.MainActivity
 import org.youpip.app.adapter.ItemSuggestAdapter
-import org.youpip.app.adapter.ItemVideoHomeAdapter
 import org.youpip.app.base.BaseFragment
 import org.youpip.app.databinding.FragmentSuggestBinding
 import org.youpip.app.network.RequiresApi
 import java.util.*
+
 
 class SuggestFragment : BaseFragment() {
 
@@ -37,7 +40,7 @@ class SuggestFragment : BaseFragment() {
         }
         ipSearch.addTextChangedListener(object : TextWatcher {
             private var timer: Timer = Timer()
-            private val DELAY: Long = 500 // Milliseconds
+            private val DELAY: Long = 1000 // Milliseconds
 
             override fun afterTextChanged(s: Editable?) {
                 timer.cancel()
@@ -60,6 +63,23 @@ class SuggestFragment : BaseFragment() {
 
             }
         });
+
+        ipSearch.setOnEditorActionListener(
+            OnEditorActionListener { v, actionId, event -> // Identifier of the action. This will be either the identifier you supplied,
+                // or EditorInfo.IME_NULL if being called due to the enter key being pressed.
+                if (actionId == EditorInfo.IME_ACTION_SEARCH || actionId == EditorInfo.IME_ACTION_DONE || (event.action == KeyEvent.ACTION_DOWN
+                            && event.keyCode == KeyEvent.KEYCODE_ENTER)
+                ) {
+                    val content =ipSearch.text.toString().trim();
+                    if(content!=""){
+                        (mActivity as MainActivity).showKeyboard(false)
+                        showNextNoAddStack(VideoSearchFragment(content))
+                    }
+                    return@OnEditorActionListener true
+                }
+                // Return true if you have consumed the action, else false.
+                false
+            })
     }
 
     override fun onInitialized() {

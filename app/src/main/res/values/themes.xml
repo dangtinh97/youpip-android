@@ -31,4 +31,23 @@
         <item name="cornerSizeBottomRight">15dp</item>
 
     </style>
+
+    <style name="ShapeAppearanceOverlay.MyApp.Button.Circle" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">50%</item>
+    </style>
+
+    <style name="Toolbar.Title" parent="">
+        <item name="fontFamily">@font/montserrat_bold</item>
+        <item name="font">@font/montserrat_bold</item>
+        <item name="color">@color/white</item>
+        <item name="android:textSize">20sp</item>
+        <item name="android:textColor">@color/white</item>
+        <item name="fontWeight">600</item>
+    </style>
+
+    <style name="DialogAnimation">
+        <item name="android:windowEnterAnimation">@android:anim/fade_in</item>
+        <item name="android:windowExitAnimation">@android:anim/slide_out_right</item>
+    </style>
 </resources>

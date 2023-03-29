@@ -29,7 +29,7 @@ class SplashActivity : BaseActivity() {
             val data = it.data as LinkedTreeMap<*, *>
             val token = data.get("token").toString()
             mySharePre.saveString("token", "Bearer $token")
-            mySharePre.saveString("username",data.get("username").toString())
+            mySharePre.saveString("username", data["username"].toString())
             val myIntent = Intent(this, MainActivity::class.java)
             startActivity(myIntent)
             finish()

@@ -32,8 +32,7 @@
                 android:value="" />
         </activity>
         <activity
-
-            android:screenOrientation="portrait"
+            android:screenOrientation="unspecified"
             android:name=".views.activity.SplashActivity"
             android:exported="true">
             <intent-filter>

@@ -24,13 +24,14 @@ class HomeFragment : BaseFragment() {
     private lateinit var recyclerView: RecyclerView
     private lateinit var adapter: ItemVideoHomeAdapter
     override fun onViewCreateBase(view: View, savedInstanceState: Bundle?) {
-        loadData()
+
     }
 
     override fun onInitialized() {
         recyclerView = binding.listVideo
         recyclerView.suppressLayout(true)
         customRecyclerView()
+        loadData()
     }
 
     fun customRecyclerView(){

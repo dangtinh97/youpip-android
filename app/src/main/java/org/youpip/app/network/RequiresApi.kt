@@ -18,10 +18,11 @@ class RequiresApi {
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(
                     {
+                        println("====>ApiSuccess:${it}")
                         callbackResponse.invoke(it)
                     },
                     {
-                        println("====>${it}")
+                        println("====>ApiError:${it}")
                         callbackResponse.invoke(null)
                     }
                 )

@@ -2,9 +2,11 @@ package org.youpip.app.base
 
 import android.os.Bundle
 import android.view.View
+import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentTransaction
 import androidx.lifecycle.ViewModelProvider
+import org.youpip.app.MainActivity
 import org.youpip.app.R
 import org.youpip.app.interfacem.IOnBackEvent
 import org.youpip.app.network.ApiService
@@ -60,5 +62,9 @@ abstract class BaseFragment:Fragment(),IOnBackEvent {
         fragmentManager
             .replace(idFragment, fragment )
             .commit()
+    }
+
+    fun alert(text:String){
+        Toast.makeText((mActivity as MainActivity).baseContext,text,Toast.LENGTH_SHORT).show()
     }
 }

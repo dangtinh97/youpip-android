@@ -49,6 +49,50 @@ interface ApiService {
         @Query("video-id") videoId :String
     ): Observable<BaseApi<Any>>
 
+    @GET("posts")
+    fun posts(
+        @Header("Authorization") token: String,
+        @Query("post_last_oid") lastPostOid :String?
+    ): Observable<BaseApi<Any>>
+
+    @FormUrlEncoded
+    @POST("attachment")
+    fun uploadFile(
+        @Header("Authorization") token: String,
+        @Field("file") file :String
+    ): Observable<BaseApi<Any>>
+
+    @FormUrlEncoded
+    @POST("posts")
+    fun createPost(
+        @Header("Authorization") token: String,
+        @Field("attachment_id") attachmentId: String,
+        @Field("content") content: String
+    ): Observable<BaseApi<Any>>
+
+    @FormUrlEncoded
+    @POST("posts/{id}/reaction")
+    fun reaction(
+        @Header("Authorization") token: String,
+        @Path("id") id: String,
+        @Field("action") action: String
+    ): Observable<BaseApi<Any>>
+
+    @FormUrlEncoded
+    @POST("posts/{id}/comment")
+    fun comment(
+        @Header("Authorization") token: String,
+        @Path("id") id: String,
+        @Field("content") content: String
+    ): Observable<BaseApi<Any>>
+
+    @GET("posts/{id}/comment")
+    fun getComment(
+        @Header("Authorization") token: String,
+        @Path("id") id: String,
+        @Query("last_comment_oid") lastCommentOid: String
+    ): Observable<BaseApi<Any>>
+
     companion object{
         private val gson = GsonBuilder().setLenient().create()
         private var headerInterceptor:HeaderInterceptor = HeaderInterceptor()
