@@ -79,8 +79,7 @@ class FeedFragment : BaseFragment(), CardStackListener {
                 return@callApi
             }
 
-            if(it.status==204){
-                layoutRefresh.visibility = View.VISIBLE
+            if(it.status!=200){
                 return@callApi
             }
             layoutRefresh.visibility = View.GONE

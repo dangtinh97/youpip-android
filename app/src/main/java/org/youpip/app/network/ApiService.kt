@@ -93,6 +93,13 @@ interface ApiService {
         @Query("last_comment_oid") lastCommentOid: String
     ): Observable<BaseApi<Any>>
 
+
+    @GET("chats")
+    fun listChat(
+        @Header("Authorization") token: String,
+        @Query("last_oid") id: String
+    ): Observable<BaseApi<Any>>
+
     companion object{
         private val gson = GsonBuilder().setLenient().create()
         private var headerInterceptor:HeaderInterceptor = HeaderInterceptor()

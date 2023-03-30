@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
+    android:id="@+id/layout"
     android:background="@drawable/item_chat_click"
     android:backgroundTint="@color/white"
     android:layout_marginBottom="@dimen/_12sdp"
@@ -25,14 +26,16 @@
             android:fontFamily="@font/montserrat_bold"
             android:textColor="@color/black"
             android:textFontWeight="600"
-            android:text="Đỗ Quỳnh"
+            android:text="@string/default_label"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"/>
         <TextView
+            android:ellipsize="end"
+            android:maxLines="1"
             android:layout_below="@id/full_name"
-            android:id="@+id/last_message"
+            android:id="@+id/content"
             android:textColor="@color/gray_20"
-            android:text="Dậy đi làm thôi nào"
+            android:text="@string/default_label"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"/>
     </RelativeLayout>

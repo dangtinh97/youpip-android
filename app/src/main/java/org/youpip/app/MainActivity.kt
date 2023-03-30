@@ -50,7 +50,7 @@ private const val CONTROL_TYPE_PAUSE = "pause"
 
 class MainActivity : BaseActivity(),ServiceConnection {
     private lateinit var binding: ActivityMainBinding
-    public lateinit var navigationTabBottom: BottomNavigationView
+    lateinit var navigationTabBottom: BottomNavigationView
     private lateinit var viewPagerMain: ViewPager2
     private var positionTab: Int? = null
 
@@ -341,7 +341,6 @@ class MainActivity : BaseActivity(),ServiceConnection {
                     }
                     Player.STATE_IDLE -> {}
                 }
-
             }
 
             override fun onIsLoadingChanged(isLoading: Boolean) {
