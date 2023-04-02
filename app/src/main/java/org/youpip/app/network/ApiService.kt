@@ -12,6 +12,7 @@ import java.util.concurrent.TimeUnit
 
 const val TIME_REQUEST: Long = 100
 const val BASE_URL = "http://54.254.11.130/api/"
+const val SOCKET_URL = "54.254.11.130"
 interface ApiService {
 
     @FormUrlEncoded
@@ -86,6 +87,14 @@ interface ApiService {
         @Field("content") content: String
     ): Observable<BaseApi<Any>>
 
+    @FormUrlEncoded
+    @POST("chats/{id}")
+    fun sendMessage(
+        @Header("Authorization") token: String,
+        @Path("id") id: String,
+        @Field("message") message: String
+    ): Observable<BaseApi<Any>>
+
     @GET("posts/{id}/comment")
     fun getComment(
         @Header("Authorization") token: String,
@@ -98,6 +107,14 @@ interface ApiService {
     fun listChat(
         @Header("Authorization") token: String,
         @Query("last_oid") id: String
+    ): Observable<BaseApi<Any>>
+
+    @GET("chats/{id}")
+    fun message(
+        @Header("Authorization") token: String,
+        @Path("id") id: String,
+        @Query("last_oid") lastOid: String,
+
     ): Observable<BaseApi<Any>>
 
     companion object{

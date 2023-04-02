@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.os.Handler
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import org.youpip.app.dialog.MessageActivityNotification
 import org.youpip.app.model.Video
 import org.youpip.app.network.ApiService
 import org.youpip.app.utils.MySharePre

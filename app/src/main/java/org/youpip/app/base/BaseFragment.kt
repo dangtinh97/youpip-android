@@ -20,12 +20,15 @@ abstract class BaseFragment:Fragment(),IOnBackEvent {
     lateinit var mySharePre: MySharePre
     lateinit var token:String
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+
         if (!this::fragmentView.isInitialized){
             fragmentView = view
             mySharePre = MySharePre(mActivity.baseContext)
             token = mySharePre.getString("token").toString()
+            mySharePre.remove("SCREEN")
             onInitialized()
         }
+
         onViewCreateBase(view, savedInstanceState)
         super.onViewCreated(view, savedInstanceState)
     }

@@ -63,20 +63,23 @@ class ListChatFragment : BaseFragment() {
     }
 
     override fun onInitialized() {
-        loadData()
         recyclerView = binding.listChat
         btnBack = binding.back
         btnBack.setOnClickListener {
             showNextNoAddStack(FeedFragment())
+
             return@setOnClickListener
         }
         customRecyclerView()
+        loadData()
+        onMessageSocket()
     }
 
     private fun customRecyclerView(){
         val layoutManager = LinearLayoutManager(requireContext(), LinearLayoutManager.VERTICAL, false)
         adapter = ChatAdapter{
-            alert("It Click Me...")
+            (mActivity as MainActivity).showNavigationBottom(false)
+            showNextNoAddStack(ChatFragment(it))
         }
         recyclerView.layoutManager = layoutManager
         recyclerView.adapter = adapter
@@ -90,5 +93,12 @@ class ListChatFragment : BaseFragment() {
             binding = FragmentListChatBinding.inflate(inflater, container, false)
         }
         return binding.root
+    }
+
+    fun onMessageSocket()
+    {
+        (mActivity as MainActivity).socket.on("PUSH_ROOM"){
+            println("====>onMessage")
+        }
     }
 }

@@ -6,6 +6,7 @@ import android.app.PendingIntent.*
 import android.content.*
 import android.content.pm.ActivityInfo
 import android.content.res.Configuration
+import android.graphics.Rect
 import android.graphics.drawable.Icon
 import android.os.IBinder
 import android.os.StrictMode
@@ -31,14 +32,22 @@ import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.gson.internal.LinkedTreeMap
 import com.squareup.picasso.Picasso
+import io.socket.client.IO
+import io.socket.client.Socket
+import io.socket.emitter.Emitter
+import org.json.JSONObject
 import org.youpip.app.adapter.ItemVideoMoreAdapter
 import org.youpip.app.adapter.ViewPagerTabAdapter
 import org.youpip.app.base.BaseActivity
 import org.youpip.app.databinding.ActivityMainBinding
+import org.youpip.app.dialog.MessageActivityNotification
+import org.youpip.app.model.MessageModel
 import org.youpip.app.model.Video
 import org.youpip.app.network.RequiresApi
+import org.youpip.app.network.SOCKET_URL
 import org.youpip.app.service.MusicService
 import java.util.*
+import kotlin.collections.Map
 import kotlin.system.exitProcess
 
 
@@ -48,6 +57,7 @@ private const val CONTROL_TYPE_EXIT = "exit"
 private const val CONTROL_TYPE_PLAY = "play"
 private const val CONTROL_TYPE_PAUSE = "pause"
 
+@Suppress("UNREACHABLE_CODE")
 class MainActivity : BaseActivity(),ServiceConnection {
     private lateinit var binding: ActivityMainBinding
     lateinit var navigationTabBottom: BottomNavigationView
@@ -87,7 +97,9 @@ class MainActivity : BaseActivity(),ServiceConnection {
     private lateinit var recyclerView: RecyclerView
     private lateinit var adapter: ItemVideoMoreAdapter
     lateinit var btnOnlyAudio:ImageView
+    lateinit var socket: Socket
 
+    lateinit var dialogNotification: MessageActivityNotification
     companion object {
         var videoP:Video? = null
         var musicService: MusicService? = null
@@ -95,6 +107,7 @@ class MainActivity : BaseActivity(),ServiceConnection {
         var newConfigMode:Configuration? = null
         lateinit var player: ExoPlayer
         var currentPositionMedia:Int = 0
+
     }
 
     override fun setViewBinding() {
@@ -109,7 +122,8 @@ class MainActivity : BaseActivity(),ServiceConnection {
         windowsManager.defaultDisplay.getMetrics(displayMetrics)
         findViewById()
         setPictureInPictureParams(PictureInPictureParams.Builder().build())
-
+        dialogNotification = MessageActivityNotification(this)
+        dialogNotification.window?.setGravity(Gravity.TOP)
         navigationTabBottom.setOnItemSelectedListener  { menuItem ->
             when (menuItem.itemId) {
                 R.id.navigation_1 -> setTab(0)
@@ -272,6 +286,8 @@ class MainActivity : BaseActivity(),ServiceConnection {
         val intent = Intent(this,MusicService::class.java)
         bindService(intent,this, BIND_AUTO_CREATE)
         startService(intent)
+        connectSocket()
+        dialogNotification.showMessage("âsasas")
     }
 
     private fun onCreateBaseVideo() {
@@ -696,6 +712,64 @@ class MainActivity : BaseActivity(),ServiceConnection {
         }else{
             navigationTabBottom.visibility = View.GONE
         }
+    }
+
+    override fun dispatchTouchEvent(event: MotionEvent): Boolean {
+        if (event.action == MotionEvent.ACTION_DOWN) {
+            val v = currentFocus
+            if (v is EditText && mySharePre.getString("SCREEN")!="ChatFragment") {
+                val outRect = Rect()
+                v.getGlobalVisibleRect(outRect)
+                if (!outRect.contains(event.rawX.toInt(), event.rawY.toInt())) {
+                    v.clearFocus()
+                    val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
+                    imm.hideSoftInputFromWindow(v.getWindowToken(), 0)
+                }
+            }
+        }
+        return super.dispatchTouchEvent(event)
+    }
+
+    private fun connectSocket()
+    {
+        val map = mapOf<String,String>("token" to token.replace("Bearer ",""))
+        // Set up the Socket.IO client
+        val options = IO.Options().apply {
+            hostname = SOCKET_URL
+            port = 3003
+            auth = map
+            }
+
+        socket = IO.socket("http://${options.hostname}:${options.port}", options)
+        socket.on(Socket.EVENT_CONNECT, onConnect)
+
+        socket.on(ESocket.Message.value+"_OTHER"){
+            val data = it[0] as JSONObject
+            runOnUiThread {
+                if(mySharePre.getString("SCREEN")!="ChatFragment"){
+                    dialogNotification.showMessage(data.getString("content"))
+                }
+            }
+        }
+
+        socket.connect()
+        return
+    }
+
+    private val onConnect = Emitter.Listener {
+        println("====>socket:Connected")
+        runOnUiThread {
+            Toast.makeText(this,"Connected!",Toast.LENGTH_SHORT).show()
+        }
+
+    }
+
+    private val onDisconnect = Emitter.Listener {
+        Toast.makeText(this,"onDisconnect",Toast.LENGTH_SHORT).show()
+    }
+
+    private val onMessage = Emitter.Listener { args ->
+        println("====>onMessage${args[0] as String} 1")
     }
 
 }

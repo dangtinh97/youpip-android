@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/layout"
+    android:layout_width="wrap_content"
+    android:layout_marginBottom="@dimen/_4sdp"
+    android:layout_height="wrap_content">
+    <TextView
+        android:maxWidth="300dp"
+        android:layout_alignParentEnd="true"
+        android:id="@+id/message_right"
+        android:background="@drawable/right_radius"
+        android:padding="@dimen/_8sdp"
+        android:text="@string/watch_list_later"
+        android:textColor="@color/white"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"/>
+    <TextView
+        android:maxWidth="300dp"
+        android:layout_alignParentStart="true"
+        android:id="@+id/message_left"
+        android:background="@drawable/left_radius"
+        android:padding="@dimen/_8sdp"
+        android:text="@string/watch_list_later"
+        android:textColor="@color/white"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"/>
+</RelativeLayout>
