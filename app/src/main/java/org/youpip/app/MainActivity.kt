@@ -129,8 +129,7 @@ class MainActivity : BaseActivity(),ServiceConnection {
                 R.id.navigation_1 -> setTab(0)
                 R.id.navigation_2 -> setTab(1)
                 R.id.navigation_3 -> setTab(2)
-//                R.id.navigation_4 -> setTab(3)
-//                R.id.navigation_5 -> setTab(5)
+                R.id.navigation_4 -> setTab(3)
             }
             true
         }
@@ -287,7 +286,6 @@ class MainActivity : BaseActivity(),ServiceConnection {
         bindService(intent,this, BIND_AUTO_CREATE)
         startService(intent)
         connectSocket()
-        dialogNotification.showMessage("âsasas")
     }
 
     private fun onCreateBaseVideo() {
@@ -758,9 +756,9 @@ class MainActivity : BaseActivity(),ServiceConnection {
 
     private val onConnect = Emitter.Listener {
         println("====>socket:Connected")
-        runOnUiThread {
-            Toast.makeText(this,"Connected!",Toast.LENGTH_SHORT).show()
-        }
+//        runOnUiThread {
+//
+//        }
 
     }
 

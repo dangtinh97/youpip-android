@@ -5,6 +5,7 @@ import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.Lifecycle
 import androidx.viewpager2.adapter.FragmentStateAdapter
 import org.youpip.app.views.fragment.home.BaseHomeFragment
+import org.youpip.app.views.fragment.more.BaseMoreFragment
 import org.youpip.app.views.fragment.search.BaseSearchFragment
 import org.youpip.app.views.fragment.social.BaseSocialFragment
 
@@ -21,6 +22,7 @@ FragmentStateAdapter(fragmentManager,lifecycle){
             0 -> return BaseHomeFragment()
             1 -> return BaseSearchFragment()
             2 -> return BaseSocialFragment()
+            3 -> return BaseMoreFragment()
         }
         return BaseHomeFragment()
     }

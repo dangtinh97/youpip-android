@@ -8,6 +8,15 @@
     android:paddingHorizontal="@dimen/_12sdp"
     android:layout_height="wrap_content">
     <TextView
+        android:layout_marginBottom="@dimen/_4sdp"
+        android:fontFamily="@font/montserrat_bold"
+        android:id="@+id/alert"
+        android:textColor="@color/white"
+        android:text="@string/message"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"/>
+    <TextView
+        android:layout_below="@+id/alert"
         android:id="@+id/message"
         android:textColor="@color/white"
         android:text="Tin nhắn mới này"
