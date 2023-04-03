@@ -8,7 +8,7 @@
     android:id="@+id/layout_view"
     android:layout_height="wrap_content">
     <com.google.android.material.imageview.ShapeableImageView
-        android:src="@drawable/doquynh"
+        android:src="@drawable/logo_512_png"
         android:id="@+id/thumbnail"
         android:scaleType="fitCenter"
         android:layout_width="140dp"

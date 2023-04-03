@@ -76,7 +76,7 @@
         <ImageView
             android:background="@color/gray"
             android:id="@+id/thumbnail_video"
-            android:src="@drawable/doquynh"
+            android:src="@drawable/logo_512_png"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"/>
         <RelativeLayout

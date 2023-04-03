@@ -27,9 +27,12 @@ import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.google.android.material.button.MaterialButton
 import com.google.gson.internal.LinkedTreeMap
+import org.youpip.app.MainActivity
 import org.youpip.app.R
 import org.youpip.app.adapter.PostMeAdapter
 import org.youpip.app.databinding.FragmentUploadPostBinding
+import org.youpip.app.dialog.DialogNotification
+import org.youpip.app.model.PostModel
 import org.youpip.app.network.ApiService
 import org.youpip.app.network.RequiresApi
 import org.youpip.app.utils.MySharePre
@@ -53,8 +56,15 @@ class UploadPostFragment(val callApi: ApiService,val mySharePre: MySharePre) : B
     private lateinit var closeUploadPost:ImageView
     private var idImage:String = "";
     private lateinit var btnSubmit:MaterialButton
+    private lateinit var notification: DialogNotification
+    private var lastOid:String? = null
+    private var token:String=""
+    private var postOidPendingDelete:String=""
+    private var isLoadMore:Boolean = false
+    private lateinit var layoutManager: LinearLayoutManager
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        token = mySharePre.getString("token").toString()
         super.onViewCreated(view, savedInstanceState)
         imagePost = binding.imagePost
         btnClearImage = binding.btnClearImage
@@ -64,22 +74,31 @@ class UploadPostFragment(val callApi: ApiService,val mySharePre: MySharePre) : B
         handlerOnClick()
         recyclerView = binding.recyclerView
         customRecyclerView()
+        loadData()
+        initScrollRecyclerView()
+        notification = DialogNotification(requireContext())
+    }
 
-        val listPost = arrayListOf<String>()
-        listPost.add("122112122")
-        listPost.add("122112122")
-        listPost.add("122112122")
-        listPost.add("122112122")
-        listPost.add("122112122")
-        listPost.add("122112122")
-        listPost.add("122112122")
-        listPost.add("122112122")
-        listPost.add("122112122")
-        listPost.add("122112122")
-        listPost.add("122112122")
-        listPost.add("122112122")
-        adapter.setData(listPost)
+    private fun initScrollRecyclerView()
+    {
+        recyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener()
+        {
+            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int)
+            {
+                super.onScrolled(recyclerView, dx, dy)
 
+                if (!isLoadMore)
+                {
+                    //findLastCompletelyVisibleItemPostition() returns position of last fully visible view.
+                    ////It checks, fully visible view is the last one.
+                    if (layoutManager.findFirstCompletelyVisibleItemPosition() == 0)
+                    {
+                        isLoadMore = true
+                        loadData()
+                    }
+                }
+            }
+        })
     }
 
     private fun handlerOnClick(){
@@ -90,7 +109,7 @@ class UploadPostFragment(val callApi: ApiService,val mySharePre: MySharePre) : B
             }
 
             val apiUpload = callApi.createPost(
-                token = mySharePre.getString("token").toString(),
+                token = token,
                 content = content,
                 attachmentId = idImage
             )
@@ -105,7 +124,9 @@ class UploadPostFragment(val callApi: ApiService,val mySharePre: MySharePre) : B
                 }
                 val data = it.data as LinkedTreeMap<*, *>
                 println("====>Post:${data}")
-                Toast.makeText(requireContext(),it.content,Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(),"Đăng bài thành công!",Toast.LENGTH_SHORT).show()
+                lastOid = null
+                loadData()
             }
         }
 
@@ -124,12 +145,43 @@ class UploadPostFragment(val callApi: ApiService,val mySharePre: MySharePre) : B
     }
 
     private fun customRecyclerView(){
-        val layoutManager = LinearLayoutManager(requireContext(), LinearLayoutManager.VERTICAL, false)
-        adapter = PostMeAdapter{
+        layoutManager = LinearLayoutManager(requireContext(), LinearLayoutManager.VERTICAL, false)
+        adapter = PostMeAdapter { post: Array<String> ->
+            val postOid = post[0]
+            val action = post[1]
+            if(action==="DELETE"){
+                notification.showMessage("Bạn có muốn xoá bài viết này?") {
+                    notification.dismiss()
+                    deletePost(postOid)
+                }
+            }
+
+            if(action==="COMMENT"){
+                val bottomSheet = CommentFragment(postOid, callApi, mySharePre)
+                fragmentManager?.let { it1 -> bottomSheet.show(it1, bottomSheet.tag) }
+                return@PostMeAdapter
+            }
 
         }
         recyclerView.layoutManager = layoutManager
         recyclerView.adapter = adapter
+    }
+
+    private fun deletePost(postOid:String)
+    {
+        val deletePost = callApi.deletePost(
+            token,
+            postOid
+        )
+
+        RequiresApi.callApi(requireContext(),deletePost){
+            if(it==null || it.status!=200){
+                return@callApi
+            }
+            Toast.makeText(requireContext(),"Xoá bài viết thành công!",Toast.LENGTH_SHORT).show()
+            lastOid = null
+            loadData()
+        }
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -170,7 +222,7 @@ class UploadPostFragment(val callApi: ApiService,val mySharePre: MySharePre) : B
         val imageBytes = baos.toByteArray()
         val imageString = Base64.encodeToString(imageBytes, Base64.NO_WRAP)
         val apiUpload = callApi.uploadFile(
-            mySharePre.getString("token").toString(),
+            token,
             imageString
         )
 
@@ -216,5 +268,39 @@ class UploadPostFragment(val callApi: ApiService,val mySharePre: MySharePre) : B
             dialog?.findViewById<FrameLayout>(com.google.android.material.R.id.design_bottom_sheet)
         bottomSheet?.layoutParams?.height = getScreenHeight()
         return myDialog
+    }
+
+    private fun loadData()
+    {
+        val token=mySharePre.getString("token").toString()
+        val home = callApi.feed(token,lastOid)
+        RequiresApi.callApi(requireContext(),home){
+            if(it===null || it.status!=200){
+                return@callApi
+            }
+
+            val data = it.data as LinkedTreeMap<*, *>
+            val list = data["list"] as ArrayList<*>
+            val listData = arrayListOf<PostModel>()
+            list.forEach { item->
+                item as LinkedTreeMap<*, *>
+                val model = PostModel(
+                    item["full_name"].toString(),
+                    item["image"].toString(),
+                    item["content"].toString(),
+                    item["post_oid"].toString(),
+                    item["time"].toString(),
+                    item["liked"].toString().toBoolean(),
+                )
+                lastOid = item["post_oid"].toString()
+                listData.add(model)
+                if(isLoadMore){
+                    adapter.appendData(model)
+                }
+            }
+            if(listData.size>0 && !isLoadMore){
+                adapter.setData(listData)
+            }
+        }
     }
 }

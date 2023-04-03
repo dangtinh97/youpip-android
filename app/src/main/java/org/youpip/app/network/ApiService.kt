@@ -11,8 +11,8 @@ import retrofit2.http.*
 import java.util.concurrent.TimeUnit
 
 const val TIME_REQUEST: Long = 100
-const val BASE_URL = "http://54.254.11.130/api/"
-const val SOCKET_URL = "54.254.11.130"
+const val BASE_URL = "http://youpip.net/api/"
+const val SOCKET_URL = "youpip"
 interface ApiService {
 
     @FormUrlEncoded
@@ -58,11 +58,23 @@ interface ApiService {
         @Query("post_last_oid") lastPostOid :String?
     ): Observable<BaseApi<Any>>
 
+    @GET("posts/feed")
+    fun feed(
+        @Header("Authorization") token: String,
+        @Query("post_last_oid") lastPostOid :String?
+    ): Observable<BaseApi<Any>>
+
     @FormUrlEncoded
     @POST("attachment")
     fun uploadFile(
         @Header("Authorization") token: String,
         @Field("file") file :String
+    ): Observable<BaseApi<Any>>
+
+    @DELETE("posts/{id}")
+    fun deletePost(
+        @Header("Authorization") token: String,
+        @Path("id") file :String
     ): Observable<BaseApi<Any>>
 
     @FormUrlEncoded

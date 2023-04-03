@@ -17,7 +17,6 @@
         android:layout_height="match_parent">
         <ImageView
             android:scaleType="center"
-            android:src="@drawable/doquynh"
             android:id="@+id/post_image"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
