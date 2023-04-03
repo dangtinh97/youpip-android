@@ -8,6 +8,7 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.common.collect.ImmutableList
 import com.google.gson.internal.LinkedTreeMap
 import org.json.JSONObject
 import org.youpip.app.ESocket
@@ -28,6 +29,9 @@ class ChatFragment(val chatModel:ListChatModel) : BaseFragment() {
     private lateinit var ipChat:EditText
     private lateinit var fullName:TextView
     private lateinit var onlineIcon:ImageView
+    private var isLoadMore:Boolean = false
+    private lateinit var layoutManager:LinearLayoutManager
+    private var lastOid:String? = null
 
     override fun onViewCreateBase(view: View, savedInstanceState: Bundle?) {
         mySharePre.saveString("SCREEN","ChatFragment")
@@ -62,8 +66,30 @@ class ChatFragment(val chatModel:ListChatModel) : BaseFragment() {
         customRecyclerView()
         loadData()
         onListenerSocket()
+
+        initOnScroll()
     }
 
+    private fun initOnScroll(){
+        recyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener()
+        {
+            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int)
+            {
+                super.onScrolled(recyclerView, dx, dy)
+
+                if (!isLoadMore)
+                {
+                    //findLastCompletelyVisibleItemPostition() returns position of last fully visible view.
+                    ////It checks, fully visible view is the last one.
+                    if (layoutManager.findFirstCompletelyVisibleItemPosition() == 0)
+                    {
+                        isLoadMore = true
+                        loadData()
+                    }
+                }
+            }
+        })
+    }
 
     private fun onListenerSocket()
     {
@@ -73,6 +99,7 @@ class ChatFragment(val chatModel:ListChatModel) : BaseFragment() {
             (mActivity as MainActivity).runOnUiThread {
                 adapter.appendLast(
                     MessageModel(
+                        null,
                         data.getString("content"),
                         false,
                         null
@@ -108,6 +135,7 @@ class ChatFragment(val chatModel:ListChatModel) : BaseFragment() {
         }
         adapter.appendLast(
             MessageModel(
+                null,
                 content,
                 true,
                 null
@@ -123,7 +151,7 @@ class ChatFragment(val chatModel:ListChatModel) : BaseFragment() {
     }
 
     private fun customRecyclerView(){
-        val layoutManager = LinearLayoutManager(requireContext(), LinearLayoutManager.VERTICAL, false)
+        layoutManager = LinearLayoutManager(requireContext(), LinearLayoutManager.VERTICAL, false)
         layoutManager.stackFromEnd = true;
         adapter = MessageAdapter()
         recyclerView.layoutManager = layoutManager
@@ -153,6 +181,7 @@ class ChatFragment(val chatModel:ListChatModel) : BaseFragment() {
             if (mess != "") {
                 adapter.appendLast(
                     MessageModel(
+                        null,
                         mess,
                         false,
                         null
@@ -166,8 +195,8 @@ class ChatFragment(val chatModel:ListChatModel) : BaseFragment() {
     private fun loadData()
     {
         (mActivity as MainActivity).progressBar(true)
-        val home = callApi.message(token,id=chatModel.roomOid, lastOid = "")
-        RequiresApi.callApi(mActivity.baseContext,home){
+        val home = callApi.message(token,id=chatModel.roomOid, lastOid = lastOid.toString())
+        RequiresApi.callApi(mActivity.baseContext,home){ it ->
             (mActivity as MainActivity).progressBar(false)
             if(it===null || it.status!=200){
                 return@callApi
@@ -179,13 +208,30 @@ class ChatFragment(val chatModel:ListChatModel) : BaseFragment() {
             list.forEach { item->
                 item as LinkedTreeMap<*, *>
                 val model = MessageModel(
+                    lastOid = item["message_oid"].toString(),
                     message = item["message"].toString(),
                     me = item["from_me"].toString().toBoolean(),
                     null
                 )
                 listChat.add(model)
+
             }
-            adapter.setData(listChat)
+
+            if(listChat.size>0){
+                lastOid = listChat[0].lastOid.toString()
+            }
+
+            if(isLoadMore && listChat.size>0){
+                val newList = ImmutableList.copyOf(listChat).reverse()
+                newList.forEach { item->
+                    adapter.appendFirst(item)
+                }
+            }
+
+            if(!isLoadMore && listChat.size>0){
+                adapter.setData(listChat)
+            }
+            isLoadMore = false
         }
     }
 

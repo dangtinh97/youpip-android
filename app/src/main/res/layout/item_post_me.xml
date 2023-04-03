@@ -15,7 +15,6 @@
             android:layout_marginBottom="@dimen/_8sdp"
             android:id="@+id/content"
             android:textColor="@color/white"
-            android:text="Tôi nhận ra nhiều điều sau khi đọc xong một cuốn sách. Sách không chỉ là sách mà sách là những bài học về cuộc sống❤️"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"/>
         <ImageView
@@ -23,7 +22,7 @@
             android:scaleType="fitCenter"
             android:layout_below="@+id/content"
             android:id="@+id/image"
-            android:src="@drawable/i2"
+            android:src="@drawable/logo_512_png"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"/>
     </RelativeLayout>

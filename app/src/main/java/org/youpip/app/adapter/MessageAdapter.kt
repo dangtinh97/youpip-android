@@ -53,4 +53,11 @@ class MessageAdapter(): RecyclerView.Adapter<MessageAdapter.ViewHolder>() {
         println("====>Api${listData}")
         notifyItemRangeInserted(listData.size-1,1)
     }
+
+    fun appendFirst(mess:MessageModel)
+    {
+        listData.add(0,mess)
+        println("====>Api${listData}")
+        notifyItemInserted(0)
+    }
 }
