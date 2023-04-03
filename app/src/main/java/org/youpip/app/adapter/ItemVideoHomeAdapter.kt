@@ -13,7 +13,7 @@ import java.net.URL
 
 
 class ItemVideoHomeAdapter(val callbackOnClick: (Video?) -> Unit):RecyclerView.Adapter<ItemVideoHomeAdapter.ViewHolder>() {
-    private var listVideo = emptyList<Video>()
+    private var listVideo = arrayListOf<Video>()
     private var width = 120;
     class ViewHolder(itemView:View):RecyclerView.ViewHolder(itemView){
         val tChanel = itemView.findViewById<TextView>(R.id.t_chanel)
@@ -52,12 +52,18 @@ class ItemVideoHomeAdapter(val callbackOnClick: (Video?) -> Unit):RecyclerView.A
         return listVideo.size
     }
 
-    fun setData(list: List<Video>) {
+    fun setData(list: ArrayList<Video>) {
         listVideo = list
         notifyDataSetChanged()
     }
 
     fun setWidth (widthSet:Int){
         width = widthSet
+    }
+
+    fun appendData(model:Video){
+        listVideo.add(model)
+        val pos = listVideo.size-1;
+        notifyItemRangeInserted(pos,1)
     }
 }

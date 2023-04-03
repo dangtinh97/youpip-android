@@ -10,7 +10,7 @@ import org.youpip.app.R
 import org.youpip.app.model.ListChatModel
 
 class ChatAdapter(val callbackOnClick: (ListChatModel) -> Unit): RecyclerView.Adapter<ChatAdapter.ViewHolder>() {
-    private var listData = emptyList<ListChatModel>()
+    private var listData = arrayListOf<ListChatModel>()
     class ViewHolder(itemView: View):RecyclerView.ViewHolder(itemView){
         val name = itemView.findViewById<TextView>(R.id.full_name)
         val mess: TextView = itemView.findViewById<TextView>(R.id.content)
@@ -35,9 +35,15 @@ class ChatAdapter(val callbackOnClick: (ListChatModel) -> Unit): RecyclerView.Ad
         return listData.size
     }
 
-    fun setData(arrayList: List<ListChatModel>)
+    fun setData(arrayList: ArrayList<ListChatModel>)
     {
         listData = arrayList
         notifyDataSetChanged()
+    }
+
+    fun appendData(item:ListChatModel)
+    {
+        listData.add(item)
+        notifyItemRangeInserted(listData.size - 1, 1)
     }
 }

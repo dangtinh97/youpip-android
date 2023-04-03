@@ -7,11 +7,14 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
+import android.widget.TextView
+import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.gson.internal.LinkedTreeMap
 import org.youpip.app.MainActivity
+import org.youpip.app.R
 import org.youpip.app.adapter.ItemVideoHomeAdapter
 import org.youpip.app.base.BaseFragment
 import org.youpip.app.databinding.FragmentHomeBinding
@@ -23,15 +26,74 @@ class HomeFragment : BaseFragment() {
     private lateinit var binding: FragmentHomeBinding
     private lateinit var recyclerView: RecyclerView
     private lateinit var adapter: ItemVideoHomeAdapter
+    private lateinit var recentlyView:TextView
+    private lateinit var viewAll:TextView
+    private lateinit var layoutManager:LinearLayoutManager
+    private var isLoading:Boolean = false
+    private var lastOid:String? = null
+    private var typeView:String = "view_all"
+    private var isLoadMore:Boolean = false
     override fun onViewCreateBase(view: View, savedInstanceState: Bundle?) {
 
     }
 
     override fun onInitialized() {
         recyclerView = binding.listVideo
+        recentlyView = binding.recentlyView
+        viewAll = binding.viewAll
         recyclerView.suppressLayout(true)
         customRecyclerView()
-        loadData()
+        loadData(typeView)
+        onClickListener()
+        initScrollScrollView()
+    }
+
+    private fun initScrollScrollView()
+    {
+        recyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener()
+        {
+            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int)
+            {
+                super.onScrolled(recyclerView, dx, dy)
+
+                if (!isLoading && typeView=="recently_view")
+                {
+                    //findLastCompletelyVisibleItemPostition() returns position of last fully visible view.
+                    ////It checks, fully visible view is the last one.
+                    if (layoutManager.findLastCompletelyVisibleItemPosition() == adapter.itemCount - 1)
+                    {
+                        isLoadMore = true
+                        isLoading = true
+                        loadData(typeView)
+                    }
+                }
+            }
+        })
+    }
+
+    private fun onClickListener()
+    {
+        recentlyView.setOnClickListener {
+            isLoading = true
+            recentlyView.setBackgroundResource(R.drawable.radius_30_white)
+            recentlyView.setTextColor(ContextCompat.getColor((mActivity as MainActivity).baseContext, R.color.black))
+            viewAll.setBackgroundResource(R.drawable.radius_30_black)
+            viewAll.setTextColor(ContextCompat.getColor((mActivity as MainActivity).baseContext, R.color.white))
+            typeView = "recently_view"
+            lastOid = null
+            loadData(typeView)
+        }
+
+        viewAll.setOnClickListener {
+            isLoading = true
+            lastOid = null
+            recentlyView.setBackgroundResource(R.drawable.radius_30_black)
+            recentlyView.setTextColor(ContextCompat.getColor((mActivity as MainActivity).baseContext, R.color.white))
+            viewAll.setBackgroundResource(R.drawable.radius_30_white)
+            viewAll.setTextColor(ContextCompat.getColor((mActivity as MainActivity).baseContext, R.color.black))
+            typeView = "view_all"
+            loadData(typeView)
+        }
     }
 
     fun customRecyclerView(){
@@ -42,7 +104,7 @@ class HomeFragment : BaseFragment() {
         println("====>dp${density}")
         val width = displayMetrics.widthPixels
 
-        val layoutManager = LinearLayoutManager(requireContext(), LinearLayoutManager.VERTICAL, false)
+        layoutManager = LinearLayoutManager(requireContext(), LinearLayoutManager.VERTICAL, false)
         adapter = ItemVideoHomeAdapter{
             if(it===null){
                 return@ItemVideoHomeAdapter
@@ -66,21 +128,20 @@ class HomeFragment : BaseFragment() {
         return binding.root
     }
 
-    private fun loadData(){
+    private fun loadData(type:String){
         (mActivity as MainActivity).progressBar(true)
-        val home = callApi.home(token)
+        val home = callApi.home(token,type,lastOid.toString())
         RequiresApi.callApi(mActivity.baseContext,home){
             (mActivity as MainActivity).progressBar(false)
-            println("====>result${it}--${token}")
-            if(it===null || !it.status.equals(200)){
+            if(it===null || it.status != 200){
                 return@callApi
             }
             val data = it.data as LinkedTreeMap<*, *>
-            val list = data.get("list") as ArrayList<*>
+            val list = data["list"] as ArrayList<*>
             val dataItems = arrayListOf<Video>()
             list.forEach { item->
                 item as LinkedTreeMap<*, *>
-                dataItems.add(Video(
+                val model = Video(
                     item.get("video_id").toString(),
                     item.get("title").toString(),
                     item.get("thumbnail").toString(),
@@ -89,9 +150,20 @@ class HomeFragment : BaseFragment() {
                     item.get("chanel_name").toString(),
                     item.get("chanel_url").toString(),
                     item.get("time_text").toString(),
-                ))
+                )
+                lastOid = item["last_oid"].toString()
+                if(!isLoadMore){
+                    dataItems.add(model)
+                }else{
+                    adapter.appendData(model)
+                }
             }
-            adapter.setData(dataItems)
+            if(!isLoadMore){
+                adapter.setData(dataItems)
+            }
+            isLoadMore = false
+            isLoading = false
+
         }
     }
 

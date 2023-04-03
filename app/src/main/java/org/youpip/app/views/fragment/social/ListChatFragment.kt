@@ -27,6 +27,9 @@ class ListChatFragment : BaseFragment() {
     private lateinit var adapter:ChatAdapter
     private lateinit var recyclerView: RecyclerView
     private lateinit var btnBack:ImageView
+    private lateinit var layoutManager: LinearLayoutManager
+    private var lastOid:String? = null
+    private var isLoadMore:Boolean = false
     override fun onViewCreateBase(view: View, savedInstanceState: Bundle?) {
 
     }
@@ -35,7 +38,7 @@ class ListChatFragment : BaseFragment() {
         (mActivity as MainActivity).progressBar(true)
         val list = callApi.listChat(
             token = mySharePre.getString("token").toString(),
-            id = ""
+            id = lastOid.toString()
         )
 
         RequiresApi.callApi(requireContext(),list){
@@ -48,17 +51,26 @@ class ListChatFragment : BaseFragment() {
             val listData = arrayListOf<ListChatModel>()
             list.forEach { item ->
                 item as LinkedTreeMap<*, *>
-                listData.add(
-                    ListChatModel(
-                        roomOid = item["room_oid"].toString(),
-                        fullName = item["full_name"].toString(),
-                        userId = item["user_id"].toString().replace(".0","").toInt(),
-                        message = item["message"].toString(),
-                        time = item["time"].toString()
-                    )
+                val model = ListChatModel(
+                    roomOid = item["room_oid"].toString(),
+                    fullName = item["full_name"].toString(),
+                    userId = item["user_id"].toString().replace(".0","").toInt(),
+                    message = item["message"].toString(),
+                    time = item["time"].toString()
                 )
+                lastOid = item["room_oid"].toString()
+                if(!isLoadMore){
+                    listData.add(model)
+                }else{
+                    adapter.appendData(model)
+                }
+
             }
-            adapter.setData(listData)
+            if(!isLoadMore){
+                adapter.setData(listData)
+            }
+
+            isLoadMore = false
         }
     }
 
@@ -73,10 +85,33 @@ class ListChatFragment : BaseFragment() {
         customRecyclerView()
         loadData()
         onMessageSocket()
+        initScrollView()
+    }
+
+    private fun initScrollView()
+    {
+        recyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener()
+        {
+            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int)
+            {
+                super.onScrolled(recyclerView, dx, dy)
+
+                if (!isLoadMore)
+                {
+                    //findLastCompletelyVisibleItemPostition() returns position of last fully visible view.
+                    ////It checks, fully visible view is the last one.
+                    if (layoutManager.findLastCompletelyVisibleItemPosition() == adapter.itemCount - 1)
+                    {
+                        isLoadMore = true
+                        loadData()
+                    }
+                }
+            }
+        })
     }
 
     private fun customRecyclerView(){
-        val layoutManager = LinearLayoutManager(requireContext(), LinearLayoutManager.VERTICAL, false)
+        layoutManager = LinearLayoutManager(requireContext(), LinearLayoutManager.VERTICAL, false)
         adapter = ChatAdapter{
             (mActivity as MainActivity).showNavigationBottom(false)
             showNextNoAddStack(ChatFragment(it))

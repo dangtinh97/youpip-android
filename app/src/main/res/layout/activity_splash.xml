@@ -19,7 +19,7 @@
         android:layout_height="wrap_content">
         <ImageView
             android:layout_gravity="center"
-            android:src="@drawable/logo_no_text"
+            android:src="@drawable/logo_512_png"
             android:layout_width="@dimen/_100sdp"
             android:layout_height="@dimen/_100sdp"/>
         <TextView

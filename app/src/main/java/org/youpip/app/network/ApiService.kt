@@ -24,6 +24,8 @@ interface ApiService {
     @GET("youtube/new")
     fun home(
         @Header("Authorization") token: String,
+        @Query("type") type:String,
+        @Query("last_oid") lastOid:String
     ): Observable<BaseApi<Any>>
 
     @GET("youtube/search")

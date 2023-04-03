@@ -134,7 +134,6 @@ class MainActivity : BaseActivity(),ServiceConnection {
             true
         }
         viewPagerMain.currentItem = 1
-
         recyclerView = binding.sameVideo
         recyclerView.suppressLayout(true)
         customRecyclerView()

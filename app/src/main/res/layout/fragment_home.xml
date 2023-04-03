@@ -38,12 +38,14 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content">
             <TextView
+                android:id="@+id/view_all"
                 android:background="@drawable/radius_30_white"
                 android:textColor="@color/black"
                 android:text="Tất cả"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"/>
             <TextView
+                android:id="@+id/recently_view"
                 android:layout_marginStart="@dimen/_4sdp"
                 android:background="@drawable/radius_30_black"
                 android:textColor="@color/white"
