@@ -8,7 +8,6 @@
     android:id="@+id/layout"
     tools:context=".views.fragment.social.UploadPostFragment">
     <RelativeLayout
-        android:paddingVertical="@dimen/_12sdp"
         android:background="@color/primary"
         android:orientation="horizontal"
         android:id="@+id/toolBar"
@@ -16,12 +15,13 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
         <ImageView
+            android:padding="12dp"
             android:id="@+id/close_upload_post"
             android:layout_alignParentEnd="true"
             android:src="@drawable/ic_baseline_close_24"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:contentDescription="CHAT" />
+            android:contentDescription="@string/default_label" />
     </RelativeLayout>
     <RelativeLayout
         android:id="@+id/l_content"
@@ -123,6 +123,7 @@
             app:shapeAppearanceOverlay="@style/ShapeAppearanceOverlay.MyApp.Button.Circle"
             />
         <ImageView
+            android:contentDescription="@string/default_label"
             android:adjustViewBounds="true"
             android:scaleType="fitCenter"
             android:visibility="gone"

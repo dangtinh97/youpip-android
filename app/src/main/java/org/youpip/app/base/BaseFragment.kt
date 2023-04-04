@@ -2,6 +2,7 @@ package org.youpip.app.base
 
 import android.os.Bundle
 import android.view.View
+import android.view.WindowManager
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentTransaction
@@ -20,7 +21,9 @@ abstract class BaseFragment:Fragment(),IOnBackEvent {
     lateinit var mySharePre: MySharePre
     lateinit var token:String
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-
+        activity?.window?.setSoftInputMode(
+            WindowManager.LayoutParams.SOFT_INPUT_ADJUST_PAN
+        )
         if (!this::fragmentView.isInitialized){
             fragmentView = view
             mySharePre = MySharePre(mActivity.baseContext)

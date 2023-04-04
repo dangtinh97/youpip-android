@@ -6,26 +6,38 @@
     android:layout_height="match_parent"
     tools:context=".views.fragment.social.ListChatFragment">
     <RelativeLayout
-        android:paddingVertical="@dimen/_12sdp"
         android:background="@color/primary"
         android:orientation="horizontal"
         android:id="@+id/toolBar"
+        android:minHeight="48dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
         <ImageView
+            android:layout_centerVertical="true"
             android:id="@+id/back"
             android:paddingHorizontal="@dimen/_12sdp"
             android:layout_alignParentStart="true"
             android:src="@drawable/ic_baseline_arrow_back_24"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:contentDescription="Back" />
+            android:layout_height="48dp"
+            android:contentDescription="@string/default_label" />
         <TextView
+            android:layout_centerVertical="true"
             android:layout_toEndOf="@+id/back"
             android:theme="@style/Toolbar.Title"
             android:text="Chats"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"/>
+
+        <ImageView
+            android:layout_centerVertical="true"
+            android:id="@+id/search_friend"
+            android:layout_alignParentEnd="true"
+            android:paddingHorizontal="@dimen/_12sdp"
+            android:src="@drawable/ic_round_person_add_alt_1_24"
+            android:layout_width="wrap_content"
+            android:layout_height="48dp"
+            android:contentDescription="@string/default_label" />
     </RelativeLayout>
     <androidx.core.widget.NestedScrollView
         android:layout_below="@+id/toolBar"

@@ -39,28 +39,25 @@ import org.youpip.app.utils.MySharePre
 import java.io.ByteArrayOutputStream
 
 
-class UploadPostFragment(val callApi: ApiService,val mySharePre: MySharePre) : BottomSheetDialogFragment() {
+class UploadPostFragment(val callApi: ApiService, val mySharePre: MySharePre) :
+    BottomSheetDialogFragment() {
 
-    private lateinit var binding:FragmentUploadPostBinding
-
+    private lateinit var binding: FragmentUploadPostBinding
     private val REQUEST_IMAGE = 100;
-
     private lateinit var btnClearImage: MaterialButton
-
-    private lateinit var imagePost:ImageView
-    private lateinit var postContent:EditText
+    private lateinit var imagePost: ImageView
+    private lateinit var postContent: EditText
     private var imageUri: Uri? = null
-
     private lateinit var adapter: PostMeAdapter
     private lateinit var recyclerView: RecyclerView
-    private lateinit var closeUploadPost:ImageView
-    private var idImage:String = "";
-    private lateinit var btnSubmit:MaterialButton
+    private lateinit var closeUploadPost: ImageView
+    private var idImage: String = "";
+    private lateinit var btnSubmit: MaterialButton
     private lateinit var notification: DialogNotification
-    private var lastOid:String? = null
-    private var token:String=""
-    private var postOidPendingDelete:String=""
-    private var isLoadMore:Boolean = false
+    private var lastOid: String? = null
+    private var token: String = ""
+    private var postOidPendingDelete: String = ""
+    private var isLoadMore: Boolean = false
     private lateinit var layoutManager: LinearLayoutManager
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -79,20 +76,13 @@ class UploadPostFragment(val callApi: ApiService,val mySharePre: MySharePre) : B
         notification = DialogNotification(requireContext())
     }
 
-    private fun initScrollRecyclerView()
-    {
-        recyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener()
-        {
-            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int)
-            {
+    private fun initScrollRecyclerView() {
+        recyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                 super.onScrolled(recyclerView, dx, dy)
 
-                if (!isLoadMore)
-                {
-                    //findLastCompletelyVisibleItemPostition() returns position of last fully visible view.
-                    ////It checks, fully visible view is the last one.
-                    if (layoutManager.findFirstCompletelyVisibleItemPosition() == 0)
-                    {
+                if (!isLoadMore) {
+                    if (layoutManager.findFirstCompletelyVisibleItemPosition() == adapter.itemCount - 1) {
                         isLoadMore = true
                         loadData()
                     }
@@ -101,10 +91,10 @@ class UploadPostFragment(val callApi: ApiService,val mySharePre: MySharePre) : B
         })
     }
 
-    private fun handlerOnClick(){
+    private fun handlerOnClick() {
         btnSubmit.setOnClickListener {
             val content = postContent.text.toString()
-            if(content=="" && idImage==""){
+            if (content == "" && idImage == "") {
                 return@setOnClickListener
             }
 
@@ -114,18 +104,19 @@ class UploadPostFragment(val callApi: ApiService,val mySharePre: MySharePre) : B
                 attachmentId = idImage
             )
 
-            RequiresApi.callApi(requireContext(),apiUpload){
+            RequiresApi.callApi(requireContext(), apiUpload) {
                 idImage = ""
                 showWithImage(false)
                 postContent.setText("")
 
-                if(it==null){
+                if (it == null) {
                     return@callApi
                 }
                 val data = it.data as LinkedTreeMap<*, *>
                 println("====>Post:${data}")
-                Toast.makeText(requireContext(),"Đăng bài thành công!",Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), "Đăng bài thành công!", Toast.LENGTH_SHORT).show()
                 lastOid = null
+                isLoadMore = false
                 loadData()
             }
         }
@@ -144,19 +135,19 @@ class UploadPostFragment(val callApi: ApiService,val mySharePre: MySharePre) : B
         }
     }
 
-    private fun customRecyclerView(){
+    private fun customRecyclerView() {
         layoutManager = LinearLayoutManager(requireContext(), LinearLayoutManager.VERTICAL, false)
         adapter = PostMeAdapter { post: Array<String> ->
             val postOid = post[0]
             val action = post[1]
-            if(action==="DELETE"){
+            if (action === "DELETE") {
                 notification.showMessage("Bạn có muốn xoá bài viết này?") {
                     notification.dismiss()
                     deletePost(postOid)
                 }
             }
 
-            if(action==="COMMENT"){
+            if (action === "COMMENT") {
                 val bottomSheet = CommentFragment(postOid, callApi, mySharePre)
                 fragmentManager?.let { it1 -> bottomSheet.show(it1, bottomSheet.tag) }
                 return@PostMeAdapter
@@ -167,25 +158,28 @@ class UploadPostFragment(val callApi: ApiService,val mySharePre: MySharePre) : B
         recyclerView.adapter = adapter
     }
 
-    private fun deletePost(postOid:String)
-    {
+    private fun deletePost(postOid: String) {
         val deletePost = callApi.deletePost(
             token,
             postOid
         )
 
-        RequiresApi.callApi(requireContext(),deletePost){
-            if(it==null || it.status!=200){
+        RequiresApi.callApi(requireContext(), deletePost) {
+            if (it == null || it.status != 200) {
                 return@callApi
             }
-            Toast.makeText(requireContext(),"Xoá bài viết thành công!",Toast.LENGTH_SHORT).show()
+            Toast.makeText(requireContext(), "Xoá bài viết thành công!", Toast.LENGTH_SHORT).show()
             lastOid = null
             loadData()
         }
     }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        if (!this::binding.isInitialized){
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        if (!this::binding.isInitialized) {
             binding = FragmentUploadPostBinding.inflate(inflater, container, false)
         }
         return binding.root
@@ -208,13 +202,13 @@ class UploadPostFragment(val callApi: ApiService,val mySharePre: MySharePre) : B
         }
     }
 
-    private fun imageEncode(imageUri:Uri){
+    private fun imageEncode(imageUri: Uri) {
         val input = activity?.getContentResolver()?.openInputStream(imageUri)
-        val image = BitmapFactory.decodeStream(input , null, null)
+        val image = BitmapFactory.decodeStream(input, null, null)
 
         // Encode image to base64 string
         val baos = ByteArrayOutputStream()
-        if(image==null){
+        if (image == null) {
             return
         }
 
@@ -226,24 +220,24 @@ class UploadPostFragment(val callApi: ApiService,val mySharePre: MySharePre) : B
             imageString
         )
 
-        RequiresApi.callApi(requireContext(),apiUpload){
+        RequiresApi.callApi(requireContext(), apiUpload) {
             idImage = ""
             println("====>${it}")
-            if(it==null || it.status!=200){
+            if (it == null || it.status != 200) {
                 return@callApi
             }
             val data = it.data as LinkedTreeMap<*, *>
-            idImage = data["attachment_id"].toString().replace(".0","")
+            idImage = data["attachment_id"].toString().replace(".0", "")
         }
     }
 
-    private fun showWithImage(show:Boolean){
+    private fun showWithImage(show: Boolean) {
         val transition = ChangeBounds()
-        TransitionManager.beginDelayedTransition(binding.lShowImage,transition)
-        if(show){
+        TransitionManager.beginDelayedTransition(binding.lShowImage, transition)
+        if (show) {
             imagePost.visibility = View.VISIBLE
             btnClearImage.visibility = View.VISIBLE
-        }else{
+        } else {
             btnClearImage.visibility = View.GONE
             imagePost.visibility = View.GONE
         }
@@ -270,21 +264,21 @@ class UploadPostFragment(val callApi: ApiService,val mySharePre: MySharePre) : B
         return myDialog
     }
 
-    private fun loadData()
-    {
-        val token=mySharePre.getString("token").toString()
-        val home = callApi.feed(token,lastOid)
-        RequiresApi.callApi(requireContext(),home){
-            if(it===null || it.status!=200){
+    private fun loadData() {
+        val token = mySharePre.getString("token").toString()
+        val home = callApi.feed(token, lastOid)
+        RequiresApi.callApi(requireContext(), home) {
+            if (it === null || it.status != 200) {
                 return@callApi
             }
 
             val data = it.data as LinkedTreeMap<*, *>
             val list = data["list"] as ArrayList<*>
             val listData = arrayListOf<PostModel>()
-            list.forEach { item->
+            list.forEach { item ->
                 item as LinkedTreeMap<*, *>
                 val model = PostModel(
+                    userOid = item["user_oid"].toString(),
                     item["full_name"].toString(),
                     item["image"].toString(),
                     item["content"].toString(),
@@ -294,13 +288,14 @@ class UploadPostFragment(val callApi: ApiService,val mySharePre: MySharePre) : B
                 )
                 lastOid = item["post_oid"].toString()
                 listData.add(model)
-                if(isLoadMore){
+                if (isLoadMore) {
                     adapter.appendData(model)
                 }
             }
-            if(listData.size>0 && !isLoadMore){
+            if (listData.size > 0 && !isLoadMore) {
                 adapter.setData(listData)
             }
+            isLoadMore = false
         }
     }
 }

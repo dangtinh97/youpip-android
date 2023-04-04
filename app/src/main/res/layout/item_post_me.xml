@@ -23,6 +23,7 @@
                 android:layout_toStartOf="@+id/action"
                 android:layout_height="wrap_content"/>
             <ImageView
+                android:contentDescription="@string/default_label"
                 android:id="@+id/action"
                 android:layout_marginBottom="@dimen/_4sdp"
                 android:padding="@dimen/_4sdp"
@@ -33,13 +34,14 @@
         </RelativeLayout>
 
         <ImageView
+            android:contentDescription="@string/default_label"
             android:elevation="1dp"
             android:adjustViewBounds="true"
             android:scaleType="fitCenter"
             android:layout_below="@+id/layout_content"
             android:id="@+id/image"
             android:src="@drawable/logo_512_png"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"/>
     </RelativeLayout>
 

@@ -15,6 +15,7 @@ import org.youpip.app.MainActivity
 import org.youpip.app.adapter.DatingAdapter
 import org.youpip.app.base.BaseFragment
 import org.youpip.app.databinding.FragmentHomeSocialBinding
+import org.youpip.app.model.ListChatModel
 import org.youpip.app.model.PostModel
 import org.youpip.app.network.RequiresApi
 
@@ -75,22 +76,18 @@ class FeedFragment : BaseFragment(), CardStackListener {
         RequiresApi.callApi(mActivity.baseContext,home){
             (mActivity as MainActivity).progressBar(false)
             println("====>result${lastPostOid} === ${it}--${token}")
-            if(it===null){
+            if(it===null || it.status!=200){
                 return@callApi
             }
 
-            if(it.status!=200){
-                return@callApi
-            }
             layoutRefresh.visibility = View.GONE
-            if(it.status!=200){
-                return@callApi
-            }
+
             val data = it.data as LinkedTreeMap<*, *>
             val list = data["list"] as ArrayList<*>
             list.forEach { item->
                 item as LinkedTreeMap<*, *>
                 val model = PostModel(
+                    userOid = item["user_oid"].toString(),
                     item["full_name"].toString(),
                     item["image"].toString(),
                     item["content"].toString(),
@@ -117,6 +114,10 @@ class FeedFragment : BaseFragment(), CardStackListener {
                 getFragmentManager()?.let { it1 -> bottomSheet.show(it1, bottomSheet.tag) }
                 return@DatingAdapter
             }
+            if (action == "CHAT") {
+                redirectChat(postOid)
+                return@DatingAdapter
+            }
         }
         cardStackView.adapter = adapter
 
@@ -129,6 +130,28 @@ class FeedFragment : BaseFragment(), CardStackListener {
         manager.setMaxDegree(20.0f)
         manager.setDirections(Direction.HORIZONTAL)
 
+    }
+
+    private fun redirectChat(userOid:String)
+    {
+        val home = callApi.joinRoom(token,userOid)
+        RequiresApi.callApi(mActivity.baseContext,home){
+            if(it===null || it.status!=200){
+                return@callApi
+            }
+
+            val data = it.data as LinkedTreeMap<*, *>
+            (mActivity as MainActivity).showNavigationBottom(false)
+            showNextNoAddStack(ChatFragment(
+                ListChatModel(
+                    roomOid = data["room_oid"].toString(),
+                    fullName = data["full_name"].toString(),
+                    message = "",
+                    time = "",
+                    userId = data["user_id"].toString().replace(".0","").toInt()
+                )
+            ))
+        }
     }
 
     private fun reaction(postOid:String,action:String){

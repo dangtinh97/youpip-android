@@ -12,13 +12,15 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
         <ImageView
+            android:contentDescription="@string/default_label"
             android:paddingStart="0dp"
             android:padding="@dimen/_8sdp"
             android:id="@+id/back"
             android:src="@drawable/ic_baseline_arrow_back_24"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"/>
+            android:layout_width="48dp"
+            android:layout_height="48dp"/>
         <ImageView
+            android:contentDescription="@string/default_label"
             android:visibility="gone"
             android:id="@+id/online"
             android:layout_marginEnd="@dimen/_4sdp"
@@ -42,6 +44,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"/>
     <LinearLayout
+        android:gravity="center_vertical"
         android:layout_marginTop="@dimen/_8sdp"
         android:id="@+id/layout_action"
         android:layout_marginBottom="@dimen/_4sdp"
@@ -64,12 +67,13 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"/>
         <ImageView
+            android:contentDescription="@string/default_label"
             android:id="@+id/submit"
             android:paddingVertical="@dimen/_6sdp"
             android:layout_gravity="center_vertical"
             android:paddingHorizontal="@dimen/_6sdp"
             android:src="@drawable/ic_baseline_send_24"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"/>
+            android:layout_width="48dp"
+            android:layout_height="48dp"/>
     </LinearLayout>
 </RelativeLayout>

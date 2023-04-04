@@ -10,6 +10,7 @@ import android.widget.Toast
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.gson.internal.LinkedTreeMap
+import org.youpip.app.ESocket
 import org.youpip.app.MainActivity
 import org.youpip.app.R
 import org.youpip.app.adapter.ChatAdapter
@@ -30,8 +31,12 @@ class ListChatFragment : BaseFragment() {
     private lateinit var layoutManager: LinearLayoutManager
     private var lastOid:String? = null
     private var isLoadMore:Boolean = false
+    private lateinit var searchFriend:ImageView
     override fun onViewCreateBase(view: View, savedInstanceState: Bundle?) {
-
+        mySharePre.saveString("SCREEN","ListChatFragment")
+        searchFriend.setOnClickListener {
+            showNextNoAddStack(SearchFriendFragment())
+        }
     }
 
     private fun loadData(){
@@ -77,6 +82,7 @@ class ListChatFragment : BaseFragment() {
     override fun onInitialized() {
         recyclerView = binding.listChat
         btnBack = binding.back
+        searchFriend = binding.searchFriend
         btnBack.setOnClickListener {
             showNextNoAddStack(FeedFragment())
 
@@ -130,10 +136,16 @@ class ListChatFragment : BaseFragment() {
         return binding.root
     }
 
-    fun onMessageSocket()
+    private fun onMessageSocket()
     {
-        (mActivity as MainActivity).socket.on("PUSH_ROOM"){
-            println("====>onMessage")
+        (mActivity as MainActivity).socket.on(ESocket.Message.value+"_OTHER"){
+            activity?.runOnUiThread {
+                if(mySharePre.getString("SCREEN")!="ChatFragment"){
+                    lastOid = null
+                    loadData()
+                }
+            }
         }
     }
+
 }

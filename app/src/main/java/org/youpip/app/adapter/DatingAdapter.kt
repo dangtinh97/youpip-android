@@ -17,6 +17,7 @@ class DatingAdapter(val context:Context, var list:ArrayList<PostModel>,val callb
     private lateinit var btnFavorie:MaterialButton
     private lateinit var btnFavoried:MaterialButton
     private lateinit var btnComment:MaterialButton
+    private lateinit var btnChat:MaterialButton
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): DatingViewHolder {
         return DatingViewHolder(ItemPostBinding.inflate(LayoutInflater.from(context),parent,false))
@@ -27,6 +28,7 @@ class DatingAdapter(val context:Context, var list:ArrayList<PostModel>,val callb
         btnFavorie = holder.binding.favorite
         btnFavoried = holder.binding.favorited
         btnComment = holder.binding.comment
+        btnChat = holder.binding.chat
         if(list[position].liked){
             btnFavoried.visibility = ViewGroup.VISIBLE
             btnFavorie.visibility = ViewGroup.GONE
@@ -47,8 +49,14 @@ class DatingAdapter(val context:Context, var list:ArrayList<PostModel>,val callb
             holder.binding.favorite.visibility = ViewGroup.VISIBLE
         }
 
+
+
         btnComment.setOnClickListener {
             callbackOnClick(arrayOf<String>(list[position].post_oid,"COMMENT"))
+        }
+
+        btnChat.setOnClickListener {
+            callbackOnClick(arrayOf(list[position].userOid.toString(),"CHAT"))
         }
 
         holder.binding.shortContent.text = list[position].content

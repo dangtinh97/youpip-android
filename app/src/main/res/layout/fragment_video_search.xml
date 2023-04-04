@@ -35,6 +35,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"/>
         <ImageView
+            android:contentDescription="@string/default_label"
             android:paddingHorizontal="4dp"
             android:layout_gravity="center_vertical"
             android:textColor="@color/primary"

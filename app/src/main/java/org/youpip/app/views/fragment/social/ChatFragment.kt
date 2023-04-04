@@ -238,5 +238,6 @@ class ChatFragment(val chatModel:ListChatModel) : BaseFragment() {
     override fun onDestroy() {
         super.onDestroy()
         (mActivity as MainActivity).socket.emit(ESocket.LeaveRoom.value,chatModel.roomOid)
+        mySharePre.remove("SCREEN")
     }
 }

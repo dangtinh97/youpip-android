@@ -27,7 +27,11 @@ import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.PlaybackException
 import com.google.android.exoplayer2.Player
+import com.google.android.exoplayer2.source.MediaSource
+import com.google.android.exoplayer2.source.MergingMediaSource
+import com.google.android.exoplayer2.source.ProgressiveMediaSource
 import com.google.android.exoplayer2.ui.PlayerView
+import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.gson.internal.LinkedTreeMap
@@ -41,13 +45,12 @@ import org.youpip.app.adapter.ViewPagerTabAdapter
 import org.youpip.app.base.BaseActivity
 import org.youpip.app.databinding.ActivityMainBinding
 import org.youpip.app.dialog.MessageActivityNotification
-import org.youpip.app.model.MessageModel
 import org.youpip.app.model.Video
 import org.youpip.app.network.RequiresApi
 import org.youpip.app.network.SOCKET_URL
 import org.youpip.app.service.MusicService
+import org.youpip.app.service.getVideo
 import java.util.*
-import kotlin.collections.Map
 import kotlin.system.exitProcess
 
 
@@ -138,6 +141,7 @@ class MainActivity : BaseActivity(),ServiceConnection {
         recyclerView.suppressLayout(true)
         customRecyclerView()
         navigationTabBottom.selectedItemId = R.id.navigation_1
+
     }
 
     private fun setTab(tab:Int){
@@ -200,7 +204,6 @@ class MainActivity : BaseActivity(),ServiceConnection {
         }
     }
 
-
     fun playVideo(videoPlay: Video? = null) {
         permissionPiP = false
         videoStart = false
@@ -211,35 +214,81 @@ class MainActivity : BaseActivity(),ServiceConnection {
         if (videoIsSmall) {
             smallVideo()
         }
-        player.stop()
         if(videoPlay==null){
             return
         }
+        if(player.isPlaying && videoPlay.equals(video)){
+            return
+        }
+        player.stop()
         currentPositionMedia = 0
-        apiDetailVideo(videoPlay.video_id) { it
-            val url= it
-            val mediaItem: MediaItem = MediaItem.fromUri(url)
-            player.setMediaItem(mediaItem)
+
+        getVideo(this) {
+            val video = it[1];
+            val audio = it[2];
+            println("====>videoEnd--video-${video}")
+            println("====>videoEnd--audio-${audio}")
+            val videoSource: MediaSource =
+                ProgressiveMediaSource.Factory(DefaultDataSourceFactory(this))
+                    .createMediaSource(MediaItem.fromUri(video))
+            val audioSource: MediaSource =
+                ProgressiveMediaSource.Factory(DefaultDataSourceFactory(this))
+                    .createMediaSource(MediaItem.fromUri(audio))
+            player.setMediaSource(MergingMediaSource(videoSource, audioSource))
+
             player.prepare()
             player.play()
             playerView.player = player
+
+        }.extract("-pHNEaAF2oQ")
+
+
+        apiDetailVideo(videoPlay.video_id) {
+            val all = it[0];
+            val video = it[1];
+            val audio = it[2];
+            var play = false;
+            if (video.isNotEmpty() && audio.isNotEmpty()) {
+                play = true
+                val videoSource: MediaSource =
+                    ProgressiveMediaSource.Factory(DefaultDataSourceFactory(this))
+                        .createMediaSource(MediaItem.fromUri(video))
+                val audioSource: MediaSource =
+                    ProgressiveMediaSource.Factory(DefaultDataSourceFactory(this))
+                        .createMediaSource(MediaItem.fromUri(audio))
+                player.setMediaSource(MergingMediaSource(videoSource, audioSource))
+            }
+            if (!play && all.isNotEmpty()) {
+                play = true
+                val mediaItem: MediaItem = MediaItem.fromUri(all)
+                player.setMediaItem(mediaItem)
+            }
+
+            if (play) {
+                player.prepare()
+                player.play()
+                playerView.player = player
+            }
         }
+
         video = videoPlay
         videoP = video
         suggestByVideoId(videoPlay.video_id)
         setInfo(video)
     }
 
-    private fun apiDetailVideo(videoId:String,callback:(String) -> Unit){
+    private fun apiDetailVideo(videoId:String,callback:(Array<String>) -> Unit){
         val api = callApi.findLink(token,videoId)
         RequiresApi.callApi(this,api){
-            if(it==null || !it.status.equals(200)){
+            if(it==null || it.status != 200){
                 return@callApi
             }
-            val data = it.data as LinkedTreeMap<*, *>
-            val url = data["url"].toString()
-            callback(url)
         }
+        val url = "http://youtube.com/watch?v=${videoId}"
+        getVideo(this) {
+            callback(it)
+        }.extract(url)
+
     }
 
     private fun setLayoutParamFullScreen() {
@@ -285,6 +334,7 @@ class MainActivity : BaseActivity(),ServiceConnection {
         bindService(intent,this, BIND_AUTO_CREATE)
         startService(intent)
         connectSocket()
+        testUrl()
     }
 
     private fun onCreateBaseVideo() {
@@ -393,9 +443,9 @@ class MainActivity : BaseActivity(),ServiceConnection {
                 super.onMediaItemTransition(mediaItem, reason)
                 if(currentPositionMedia>0){
                     println("====>=onMediaItemTransition:${mediaItem?.mediaId}")
-                    val current:Int? = (mediaItem?.mediaId)?.toInt()
-                    if(current != null){
-                        video = listVideo[current]
+                    val current: String? = mediaItem?.mediaId
+                    if(current != null && current.isNotEmpty()){
+                        video = listVideo[current.toInt()]
                         setInfo(video)
                         videoP = video
                         addNextVideo()
@@ -689,13 +739,36 @@ class MainActivity : BaseActivity(),ServiceConnection {
         recyclerView.adapter = adapter
     }
 
-    private fun addNextVideo(){
-        if(listVideo.size > currentPositionMedia){
-            apiDetailVideo(listVideo[currentPositionMedia].video_id){
-                val mediaItem: MediaItem =
-                    MediaItem.Builder().setUri(it).setMediaId(currentPositionMedia.toString()).build()
-                player.addMediaItem(mediaItem)
-                player.prepare()
+    private fun addNextVideo() {
+        if (listVideo.size > currentPositionMedia) {
+            apiDetailVideo(listVideo[currentPositionMedia].video_id) {
+                val all = it[0];
+                val video = it[1];
+                val audio = it[2];
+                var play = false;
+                if (video.isNotEmpty() && audio.isNotEmpty()) {
+                    /* play = true
+                     val videoSource: MediaSource =
+                         ProgressiveMediaSource.Factory(DefaultDataSourceFactory(this))
+                             .createMediaSource(MediaItem.fromUri(video))
+                     val audioSource: MediaSource =
+                         ProgressiveMediaSource.Factory(DefaultDataSourceFactory(this))
+                             .createMediaSource(MediaItem.fromUri(audio))
+                     val source = MergingMediaSource(videoSource, audioSource)
+                     player.setMediaSource(source)
+                     Toast.makeText(this,"EEE",Toast.LENGTH_SHORT).show()*/
+                }
+                if (!play && all.isNotEmpty()) {
+                    play = true
+                    val mediaItem: MediaItem =
+                        MediaItem.Builder().setUri(all).setMediaId(currentPositionMedia.toString())
+                            .build()
+                    player.addMediaItem(mediaItem)
+                }
+
+                if (play) {
+                    player.prepare()
+                }
                 currentPositionMedia++
             }
         }
@@ -754,10 +827,6 @@ class MainActivity : BaseActivity(),ServiceConnection {
     }
 
     private val onConnect = Emitter.Listener {
-        println("====>socket:Connected")
-//        runOnUiThread {
-//
-//        }
 
     }
 
@@ -767,6 +836,13 @@ class MainActivity : BaseActivity(),ServiceConnection {
 
     private val onMessage = Emitter.Listener { args ->
         println("====>onMessage${args[0] as String} 1")
+    }
+
+    private fun testUrl(){
+
+        getVideo(this){
+            println("====>youpipall${it[0]}")
+        }.extract("https://www.youtube.com/watch?v=u90pJLgWAqA")
     }
 
 }

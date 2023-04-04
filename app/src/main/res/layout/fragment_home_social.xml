@@ -15,7 +15,7 @@
         android:layout_height="wrap_content">
     </androidx.appcompat.widget.Toolbar>
     <RelativeLayout
-        android:paddingVertical="@dimen/_12sdp"
+        android:minHeight="48dp"
         android:background="@color/primary"
         android:orientation="horizontal"
         android:id="@+id/toolBar"
@@ -23,18 +23,23 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
         <ImageView
+            android:padding="8dp"
+            android:layout_centerVertical="true"
+            android:contentDescription="@string/default_label"
             android:id="@+id/btn_add_post"
             android:layout_alignParentStart="true"
             android:src="@drawable/ic_baseline_post_add_24"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"/>
         <ImageView
+            android:padding="8dp"
+            android:layout_centerVertical="true"
             android:id="@+id/list_chat"
             android:layout_alignParentEnd="true"
             android:src="@drawable/ic_chat_cp"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:contentDescription="CHAT" />
+            android:contentDescription="@string/default_label"/>
 
     </RelativeLayout>
     <RelativeLayout
@@ -49,7 +54,7 @@
         <TextView
             android:id="@+id/no_post"
             android:gravity="center"
-            android:textSize="@dimen/_24sdp"
+            android:textSize="26sp"
             android:fontFamily="@font/montserrat_bold"
             android:textColor="@color/gray_10"
             android:text="Bạn đã xem hết các bài viết!"

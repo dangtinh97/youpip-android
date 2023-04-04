@@ -6,8 +6,16 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import org.youpip.app.R
+import org.youpip.app.base.BaseFragment
 
-class BaseMoreFragment : Fragment() {
+class BaseMoreFragment : BaseFragment() {
+    override fun onViewCreateBase(view: View, savedInstanceState: Bundle?) {
+        showNextNoAddStack(SettingFragment())
+    }
+
+    override fun onInitialized() {
+
+    }
 
 
     override fun onCreateView(

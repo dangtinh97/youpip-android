@@ -31,6 +31,9 @@ class MusicService : Service() {
     }
 
     fun showNotification(isPlay: Boolean = false) {
+        if(android.os.Build.VERSION.SDK_INT == android.os.Build.VERSION_CODES.R){
+            return
+        }
         println("====>load")
         val exitIntent =
             Intent(baseContext, NotificationReceiver::class.java).setAction(ApplicationClass.EXIT)
@@ -42,12 +45,12 @@ class MusicService : Service() {
         val playIntent =
             Intent(baseContext, NotificationReceiver::class.java).setAction(ApplicationClass.PLAY)
         val playPendingIntent = getBroadcast(baseContext, 1, playIntent, FLAG_IMMUTABLE)
-
+        println("====>load2")
         val notification = NotificationCompat.Builder(baseContext, ApplicationClass.CHANNEL_ID)
             .setContentTitle(MainActivity.videoP?.title)
             .setContentText(MainActivity.videoP?.chanel_name)
             .setSmallIcon(R.drawable.logo_512_png)
-            .setLargeIcon(BitmapFactory.decodeResource(resources, R.drawable.only_bg))
+            .setLargeIcon(BitmapFactory.decodeResource(resources, R.drawable.only_color))
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .setOnlyAlertOnce(true)
@@ -64,15 +67,22 @@ class MusicService : Service() {
                 playPendingIntent
             )
         }
+        println("====>load3")
         notification.addAction(R.drawable.ic_baseline_close_24, "Close", exitPendingIntent)
-            .setStyle(
-                androidx.media.app.NotificationCompat.MediaStyle()
-                    .setShowActionsInCompactView(3)
-                    .setCancelButtonIntent(null)
-                    .setMediaSession(mediaSession.sessionToken)
-            )
 
-        startForeground(13, notification.build())
+
+        println("====>VersionIos${android.os.Build.VERSION.SDK_INT}")
+
+
+
+        notification.setStyle(
+            androidx.media.app.NotificationCompat.MediaStyle()
+                .setShowActionsInCompactView(3)
+                .setCancelButtonIntent(null)
+                .setMediaSession(mediaSession.sessionToken)
+        )
+
+        startForeground(4, notification.build())
 
     }
 }

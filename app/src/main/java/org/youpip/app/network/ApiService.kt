@@ -12,7 +12,7 @@ import java.util.concurrent.TimeUnit
 
 const val TIME_REQUEST: Long = 100
 const val BASE_URL = "http://youpip.net/api/"
-const val SOCKET_URL = "youpip"
+const val SOCKET_URL = "youpip.net"
 interface ApiService {
 
     @FormUrlEncoded
@@ -56,6 +56,12 @@ interface ApiService {
     fun posts(
         @Header("Authorization") token: String,
         @Query("post_last_oid") lastPostOid :String?
+    ): Observable<BaseApi<Any>>
+
+    @GET("chats/join-room")
+    fun joinRoom(
+        @Header("Authorization") token: String,
+        @Query("user_oid") userOid :String?
     ): Observable<BaseApi<Any>>
 
     @GET("posts/feed")
@@ -114,6 +120,13 @@ interface ApiService {
         @Header("Authorization") token: String,
         @Path("id") id: String,
         @Query("last_comment_oid") lastCommentOid: String
+    ): Observable<BaseApi<Any>>
+
+
+    @GET("chats/search-user")
+    fun searchUser(
+        @Header("Authorization") token: String,
+        @Query("username") username: String
     ): Observable<BaseApi<Any>>
 
 

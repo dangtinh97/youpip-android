@@ -10,4 +10,8 @@
     <string name="notification">Thông báo</string>
     <string name="cancel">Huỷ bỏ</string>
     <string name="confirm">Đồng ý</string>
+    <string name="setting">Cài đặt</string>
+    <string name="code">Mã kết bạn</string>
+    <string name="full_name">Họ Tên</string>
+    <string name="search_friend">Tìm bạn bè</string>
 </resources>

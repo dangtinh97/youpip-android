@@ -31,6 +31,7 @@ class SplashActivity : BaseActivity() {
             mySharePre.saveString("token", "Bearer $token")
             mySharePre.saveString("username", data["username"].toString())
             mySharePre.saveString("short_username",data["short_username"].toString())
+            mySharePre.saveString("full_name",data["full_name"].toString())
             val myIntent = Intent(this, MainActivity::class.java)
             startActivity(myIntent)
             finish()
