@@ -35,7 +35,7 @@ class ItemVideoMoreAdapter(val callbackOnClick: (Video) -> Unit): RecyclerView.A
         Picasso.get()
             .load(dataVideo.thumbnail)
             .into(holder.thumbnail);
-        holder.tChanel.setText(dataVideo.chanel_name+" | "+dataVideo.time_text)
+        holder.tChanel.text = dataVideo.chanel_name+" | "+dataVideo.time_text
         holder.title.setText(dataVideo.title)
     }
 

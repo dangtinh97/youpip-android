@@ -23,7 +23,7 @@ class getVideo(context: Context, val callBack: (Array<String>) -> Unit) : YouTub
             }
 
             //video
-            for (item: Int in arrayOf(135,136,298,247,302,244,135)) {
+            for (item: Int in arrayOf(244,247,302,135,136,298)) {
                 if (ytFiles[item] != null && video.isEmpty()) {
                     println("====>youpip:video:${item}")
                     video = ytFiles[item].url
@@ -35,6 +35,12 @@ class getVideo(context: Context, val callBack: (Array<String>) -> Unit) : YouTub
                 if (ytFiles[item] != null && audio.isEmpty()) {
                     println("====>youpip:audio:${item}")
                     audio = ytFiles[item].url
+                }
+            }
+
+            for (item:Int in arrayOf(91,92,93,94,95,96)){
+                if (ytFiles[item] != null) {
+                    println("====>youpip:hls:${item}:${ytFiles[item].url}")
                 }
             }
 

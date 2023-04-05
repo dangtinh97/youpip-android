@@ -30,8 +30,11 @@ import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.source.MediaSource
 import com.google.android.exoplayer2.source.MergingMediaSource
 import com.google.android.exoplayer2.source.ProgressiveMediaSource
+import com.google.android.exoplayer2.source.dash.DashMediaSource
 import com.google.android.exoplayer2.ui.PlayerView
+import com.google.android.exoplayer2.upstream.DataSource
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
+import com.google.android.exoplayer2.upstream.DefaultHttpDataSource
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.gson.internal.LinkedTreeMap
@@ -223,24 +226,24 @@ class MainActivity : BaseActivity(),ServiceConnection {
         player.stop()
         currentPositionMedia = 0
 
-        getVideo(this) {
-            val video = it[1];
-            val audio = it[2];
-            println("====>videoEnd--video-${video}")
-            println("====>videoEnd--audio-${audio}")
-            val videoSource: MediaSource =
-                ProgressiveMediaSource.Factory(DefaultDataSourceFactory(this))
-                    .createMediaSource(MediaItem.fromUri(video))
-            val audioSource: MediaSource =
-                ProgressiveMediaSource.Factory(DefaultDataSourceFactory(this))
-                    .createMediaSource(MediaItem.fromUri(audio))
-            player.setMediaSource(MergingMediaSource(videoSource, audioSource))
-
-            player.prepare()
-            player.play()
-            playerView.player = player
-
-        }.extract("-pHNEaAF2oQ")
+//        getVideo(this) {
+//            val video = it[1];
+//            val audio = it[2];
+//            println("====>videoEnd--video-${video}")
+//            println("====>videoEnd--audio-${audio}")
+//            val videoSource: MediaSource =
+//                ProgressiveMediaSource.Factory(DefaultDataSourceFactory(this))
+//                    .createMediaSource(MediaItem.fromUri(video))
+//            val audioSource: MediaSource =
+//                ProgressiveMediaSource.Factory(DefaultDataSourceFactory(this))
+//                    .createMediaSource(MediaItem.fromUri(audio))
+//            player.setMediaSource(MergingMediaSource(videoSource, audioSource))
+//
+//            player.prepare()
+//            player.play()
+//            playerView.player = player
+//
+//        }.extract("-pHNEaAF2oQ")
 
 
         apiDetailVideo(videoPlay.video_id) {
@@ -249,22 +252,29 @@ class MainActivity : BaseActivity(),ServiceConnection {
             val audio = it[2];
             var play = false;
             if (video.isNotEmpty() && audio.isNotEmpty()) {
+                println("====>youpip-video-${video}")
+                println("====>youpip-audio-${audio}")
                 play = true
+
+
+                val dataSourceFactory: DataSource.Factory = DefaultHttpDataSource.Factory()
                 val videoSource: MediaSource =
-                    ProgressiveMediaSource.Factory(DefaultDataSourceFactory(this))
+                    ProgressiveMediaSource.Factory(dataSourceFactory)
                         .createMediaSource(MediaItem.fromUri(video))
                 val audioSource: MediaSource =
-                    ProgressiveMediaSource.Factory(DefaultDataSourceFactory(this))
+                    ProgressiveMediaSource.Factory(dataSourceFactory)
                         .createMediaSource(MediaItem.fromUri(audio))
                 player.setMediaSource(MergingMediaSource(videoSource, audioSource))
             }
             if (!play && all.isNotEmpty()) {
+                println("====>youpip-all-${all}")
                 play = true
                 val mediaItem: MediaItem = MediaItem.fromUri(all)
                 player.setMediaItem(mediaItem)
             }
 
             if (play) {
+                println("====>youpip-prepare")
                 player.prepare()
                 player.play()
                 playerView.player = player
@@ -334,7 +344,7 @@ class MainActivity : BaseActivity(),ServiceConnection {
         bindService(intent,this, BIND_AUTO_CREATE)
         startService(intent)
         connectSocket()
-        testUrl()
+//        testUrl()
     }
 
     private fun onCreateBaseVideo() {
@@ -374,13 +384,11 @@ class MainActivity : BaseActivity(),ServiceConnection {
     private fun handlerActionPlayer(){
         player.addListener(object : Player.Listener {
             override fun onPlayWhenReadyChanged(playWhenReady: Boolean, reason: Int) {
-                println("====>=onPlayWhenReadyChanged:${playWhenReady}")
                 super.onPlayWhenReadyChanged(playWhenReady, reason)
             }
 
             @Deprecated("Deprecated in Java")
             override fun onPlayerStateChanged(playWhenReady: Boolean, playbackState: Int) {
-                println("====>=onPlayerStateChanged:${playWhenReady}")
                 playerView.visibility = View.VISIBLE
                 if(playWhenReady!=isPlay && modePiPEnable){
                     isPlay = playWhenReady
@@ -408,7 +416,6 @@ class MainActivity : BaseActivity(),ServiceConnection {
 
             override fun onIsLoadingChanged(isLoading: Boolean) {
                 super.onIsLoadingChanged(isLoading)
-                println("====>=onIsLoadingChanged:${isLoading}")
                 if(!isLoading){
                     loadImage(null, false)
                 }
@@ -416,12 +423,10 @@ class MainActivity : BaseActivity(),ServiceConnection {
 
             @Deprecated("Deprecated in Java")
             override fun onLoadingChanged(isLoading: Boolean) {
-                println("====>=listen-onLoadingChanged:${isLoading}")
                 super.onLoadingChanged(isLoading)
             }
 
             override fun onPlayerErrorChanged(error: PlaybackException?) {
-                println("====>=onPlayerErrorChanged")
                 permissionPiP = false
                 musicService!!.showNotification(false)
                 loadImage(null, true)
@@ -436,13 +441,11 @@ class MainActivity : BaseActivity(),ServiceConnection {
                     loadImage(null, false)
                 }
                 isPlay = isPlaying
-                println("====>=onIsPlayingChanged:${isPlaying}")
             }
 
             override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
                 super.onMediaItemTransition(mediaItem, reason)
                 if(currentPositionMedia>0){
-                    println("====>=onMediaItemTransition:${mediaItem?.mediaId}")
                     val current: String? = mediaItem?.mediaId
                     if(current != null && current.isNotEmpty()){
                         video = listVideo[current.toInt()]
@@ -499,7 +502,6 @@ class MainActivity : BaseActivity(),ServiceConnection {
     private fun smallVideo() {
         val layoutParams: LayoutParams = layoutVideo.getLayoutParams() as LayoutParams
         if (baseView === null) {
-            println("====>set${layoutParams}")
             baseView = layoutParams
         }
         val transition = ChangeBounds()
@@ -633,7 +635,6 @@ class MainActivity : BaseActivity(),ServiceConnection {
 
     private val broadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent?) {
-            println("====>${intent?.getStringExtra(CONTROL_TYPE)}")
             when (intent?.getStringExtra(CONTROL_TYPE)) {
                 CONTROL_TYPE_EXIT -> {
                     exitApp()
@@ -835,13 +836,13 @@ class MainActivity : BaseActivity(),ServiceConnection {
     }
 
     private val onMessage = Emitter.Listener { args ->
-        println("====>onMessage${args[0] as String} 1")
+
     }
 
     private fun testUrl(){
 
         getVideo(this){
-            println("====>youpipall${it[0]}")
+
         }.extract("https://www.youtube.com/watch?v=u90pJLgWAqA")
     }
 
