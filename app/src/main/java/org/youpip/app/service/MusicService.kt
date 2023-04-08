@@ -31,9 +31,7 @@ class MusicService : Service() {
     }
 
     fun showNotification(isPlay: Boolean = false) {
-        if(android.os.Build.VERSION.SDK_INT == android.os.Build.VERSION_CODES.R){
-            return
-        }
+
         println("====>load")
         val exitIntent =
             Intent(baseContext, NotificationReceiver::class.java).setAction(ApplicationClass.EXIT)
@@ -49,7 +47,7 @@ class MusicService : Service() {
         val notification = NotificationCompat.Builder(baseContext, ApplicationClass.CHANNEL_ID)
             .setContentTitle(MainActivity.videoP?.title)
             .setContentText(MainActivity.videoP?.chanel_name)
-            .setSmallIcon(R.drawable.logo_512_png)
+            .setSmallIcon(R.drawable.logo_24)
             .setLargeIcon(BitmapFactory.decodeResource(resources, R.drawable.only_color))
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
@@ -69,20 +67,30 @@ class MusicService : Service() {
         }
         println("====>load3")
         notification.addAction(R.drawable.ic_baseline_close_24, "Close", exitPendingIntent)
-
-
         println("====>VersionIos${android.os.Build.VERSION.SDK_INT}")
 
+        if(android.os.Build.VERSION.SDK_INT != android.os.Build.VERSION_CODES.R){
+            println("====>startNotification")
+            notification.setStyle(
+                androidx.media.app.NotificationCompat.MediaStyle()
+                    .setShowActionsInCompactView(3)
+                    .setCancelButtonIntent(null)
+                    .setMediaSession(mediaSession.sessionToken)
+            )
 
+            startForeground(3, notification.build())
+        }else{
+//            println("====>startNotification")
+//            notification.setStyle(
+//                androidx.media.app.NotificationCompat.MediaStyle()
+//                    .setShowActionsInCompactView(3)
+//                    .setCancelButtonIntent(null)
+//                    .setMediaSession(mediaSession.sessionToken)
+//            )
+//
+//            startForeground(3, notification.build())
+        }
 
-        notification.setStyle(
-            androidx.media.app.NotificationCompat.MediaStyle()
-                .setShowActionsInCompactView(3)
-                .setCancelButtonIntent(null)
-                .setMediaSession(mediaSession.sessionToken)
-        )
-
-        startForeground(4, notification.build())
 
     }
 }

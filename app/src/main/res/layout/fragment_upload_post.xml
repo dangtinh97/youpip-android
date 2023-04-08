@@ -87,7 +87,7 @@
             app:cornerRadius="@dimen/_12sdp"
             android:textAllCaps="false"
             android:textSize="12sp"
-            android:backgroundTint="@color/material_dynamic_neutral30"
+            android:backgroundTint="#2196F3"
             android:text="Đăng bài"
             android:gravity="center"
             android:layout_width="wrap_content"

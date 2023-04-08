@@ -23,6 +23,7 @@ class SplashActivity : BaseActivity() {
         }
         val login = callApi.login(username.toString())
         RequiresApi.callApi(this, login) {
+            println("====>exLogin")
             if (it === null) {
                 return@callApi
             }
@@ -33,6 +34,12 @@ class SplashActivity : BaseActivity() {
             mySharePre.saveString("short_username",data["short_username"].toString())
             mySharePre.saveString("full_name",data["full_name"].toString())
             val myIntent = Intent(this, MainActivity::class.java)
+            val extras = intent.extras
+            if (extras != null) {
+                val value1 = extras.getString(Intent.EXTRA_TEXT)
+                mySharePre.saveString("YOUTUBE",value1.toString())
+                myIntent.putExtra("YOUTUBE",value1)
+            }
             startActivity(myIntent)
             finish()
         }

@@ -11,7 +11,7 @@ import retrofit2.http.*
 import java.util.concurrent.TimeUnit
 
 const val TIME_REQUEST: Long = 100
-const val BASE_URL = "http://youpip.net/api/"
+const val BASE_URL = "https://youpip.net/api/"
 const val SOCKET_URL = "youpip.net"
 interface ApiService {
 
@@ -141,7 +141,12 @@ interface ApiService {
         @Header("Authorization") token: String,
         @Path("id") id: String,
         @Query("last_oid") lastOid: String,
+    ): Observable<BaseApi<Any>>
 
+    @GET("youtube/detail")
+    fun detail(
+        @Header("Authorization") token: String,
+        @Query("url") url: String
     ): Observable<BaseApi<Any>>
 
     companion object{

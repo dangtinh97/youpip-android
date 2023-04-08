@@ -30,10 +30,8 @@ import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.source.MediaSource
 import com.google.android.exoplayer2.source.MergingMediaSource
 import com.google.android.exoplayer2.source.ProgressiveMediaSource
-import com.google.android.exoplayer2.source.dash.DashMediaSource
 import com.google.android.exoplayer2.ui.PlayerView
 import com.google.android.exoplayer2.upstream.DataSource
-import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
 import com.google.android.exoplayer2.upstream.DefaultHttpDataSource
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.bottomsheet.BottomSheetDialog
@@ -120,7 +118,6 @@ class MainActivity : BaseActivity(),ServiceConnection {
         binding = ActivityMainBinding.inflate(layoutInflater)
         navigationTabBottom = binding.navigationTabBottom
         viewPagerMain = binding.viewPagerMain
-//        viewPagerMain.offscreenPageLimit = 1
         setContentView(binding.root)
         setViewVideoBinding()
         val displayMetrics = DisplayMetrics()
@@ -144,7 +141,31 @@ class MainActivity : BaseActivity(),ServiceConnection {
         recyclerView.suppressLayout(true)
         customRecyclerView()
         navigationTabBottom.selectedItemId = R.id.navigation_1
+        playWithShare()
+    }
 
+    private fun playWithShare(){
+        val url = mySharePre.getString("YOUTUBE") ?: return
+        mySharePre.remove("YOUTUBE")
+        val api = callApi.detail(token,url=url)
+        RequiresApi.callApi(this,api){
+            if(it==null || it.status != 200){
+                return@callApi
+            }
+            val item = it.data as LinkedTreeMap<*, *>
+            val model = Video(
+                item["video_id"].toString(),
+                item["title"].toString(),
+                item["thumbnail"].toString(),
+                item["published_time"].toString(),
+                item["view_count_text"].toString(),
+                item["chanel_name"].toString(),
+                item["chanel_url"].toString(),
+                item["time_text"].toString(),
+            )
+            println("====>explay${model}")
+            playVideo(model)
+        }
     }
 
     private fun setTab(tab:Int){
@@ -164,8 +185,6 @@ class MainActivity : BaseActivity(),ServiceConnection {
                 layoutVideo.visibility = View.VISIBLE
             }
         }
-
-
     }
 
     private fun setViewVideoBinding() {
@@ -225,26 +244,6 @@ class MainActivity : BaseActivity(),ServiceConnection {
         }
         player.stop()
         currentPositionMedia = 0
-
-//        getVideo(this) {
-//            val video = it[1];
-//            val audio = it[2];
-//            println("====>videoEnd--video-${video}")
-//            println("====>videoEnd--audio-${audio}")
-//            val videoSource: MediaSource =
-//                ProgressiveMediaSource.Factory(DefaultDataSourceFactory(this))
-//                    .createMediaSource(MediaItem.fromUri(video))
-//            val audioSource: MediaSource =
-//                ProgressiveMediaSource.Factory(DefaultDataSourceFactory(this))
-//                    .createMediaSource(MediaItem.fromUri(audio))
-//            player.setMediaSource(MergingMediaSource(videoSource, audioSource))
-//
-//            player.prepare()
-//            player.play()
-//            playerView.player = player
-//
-//        }.extract("-pHNEaAF2oQ")
-
 
         apiDetailVideo(videoPlay.video_id) {
             val all = it[0];
@@ -457,10 +456,8 @@ class MainActivity : BaseActivity(),ServiceConnection {
                 delay(1000){
                     loadImage(null, false)
                 }
-
             }
         })
-
     }
 
     fun progressBar(show: Boolean) {
@@ -662,8 +659,9 @@ class MainActivity : BaseActivity(),ServiceConnection {
         super.onResume()
         if(player.isPlaying && tabCurrent!=2){
             permissionPiP = true
-
         }
+
+        playWithShare()
     }
 
     private fun buildPip() {

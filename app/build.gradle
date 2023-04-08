@@ -6,13 +6,12 @@ plugins {
 android {
     namespace 'org.youpip.app'
     compileSdk 32
-
     defaultConfig {
         applicationId "org.youpip.app"
-        minSdk 29
+        minSdk 28
         targetSdk 32
-        versionCode 11
-        versionName "1.11"
+        versionCode 16
+        versionName "1.16"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
