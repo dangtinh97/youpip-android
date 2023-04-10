@@ -1,19 +1,20 @@
 package org.youpip.app.service
 
-import android.annotation.SuppressLint
-import android.app.PendingIntent
-import android.app.PendingIntent.*
+import android.app.NotificationManager
+import android.app.PendingIntent.FLAG_IMMUTABLE
+import android.app.PendingIntent.getBroadcast
 import android.app.Service
 import android.content.Intent
 import android.graphics.BitmapFactory
 import android.media.MediaPlayer
 import android.os.Binder
+import android.os.Build
 import android.os.IBinder
 import android.support.v4.media.session.MediaSessionCompat
 import androidx.core.app.NotificationCompat
-import com.google.android.exoplayer2.ExoPlayer
 import org.youpip.app.MainActivity
 import org.youpip.app.R
+
 
 class MusicService : Service() {
     private var myBinder = MyBinder()
@@ -32,7 +33,6 @@ class MusicService : Service() {
 
     fun showNotification(isPlay: Boolean = false) {
 
-        println("====>load")
         val exitIntent =
             Intent(baseContext, NotificationReceiver::class.java).setAction(ApplicationClass.EXIT)
         val exitPendingIntent = getBroadcast(baseContext, 0, exitIntent, FLAG_IMMUTABLE)
@@ -43,7 +43,7 @@ class MusicService : Service() {
         val playIntent =
             Intent(baseContext, NotificationReceiver::class.java).setAction(ApplicationClass.PLAY)
         val playPendingIntent = getBroadcast(baseContext, 1, playIntent, FLAG_IMMUTABLE)
-        println("====>load2")
+
         val notification = NotificationCompat.Builder(baseContext, ApplicationClass.CHANNEL_ID)
             .setContentTitle(MainActivity.videoP?.title)
             .setContentText(MainActivity.videoP?.chanel_name)
@@ -65,32 +65,17 @@ class MusicService : Service() {
                 playPendingIntent
             )
         }
-        println("====>load3")
+
         notification.addAction(R.drawable.ic_baseline_close_24, "Close", exitPendingIntent)
-        println("====>VersionIos${android.os.Build.VERSION.SDK_INT}")
+        notification.setStyle(
+            androidx.media.app.NotificationCompat.MediaStyle()
+                .setShowActionsInCompactView(3)
+                .setCancelButtonIntent(null)
+                .setMediaSession(mediaSession.sessionToken)
+        )
 
-        if(android.os.Build.VERSION.SDK_INT != android.os.Build.VERSION_CODES.R){
-            println("====>startNotification")
-            notification.setStyle(
-                androidx.media.app.NotificationCompat.MediaStyle()
-                    .setShowActionsInCompactView(3)
-                    .setCancelButtonIntent(null)
-                    .setMediaSession(mediaSession.sessionToken)
-            )
-
+        if(android.os.Build.VERSION.SDK_INT > android.os.Build.VERSION_CODES.R){
             startForeground(3, notification.build())
-        }else{
-//            println("====>startNotification")
-//            notification.setStyle(
-//                androidx.media.app.NotificationCompat.MediaStyle()
-//                    .setShowActionsInCompactView(3)
-//                    .setCancelButtonIntent(null)
-//                    .setMediaSession(mediaSession.sessionToken)
-//            )
-//
-//            startForeground(3, notification.build())
         }
-
-
     }
 }

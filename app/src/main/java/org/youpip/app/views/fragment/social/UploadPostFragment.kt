@@ -222,12 +222,13 @@ class UploadPostFragment(val callApi: ApiService, val mySharePre: MySharePre) :
 
         RequiresApi.callApi(requireContext(), apiUpload) {
             idImage = ""
-            println("====>${it}")
             if (it == null || it.status != 200) {
+                Toast.makeText(requireContext(),"Tải ảnh lên thất bại!",Toast.LENGTH_SHORT).show()
                 return@callApi
             }
             val data = it.data as LinkedTreeMap<*, *>
             idImage = data["attachment_id"].toString().replace(".0", "")
+            Toast.makeText(requireContext(),it.content,Toast.LENGTH_SHORT).show()
         }
     }
 

@@ -145,14 +145,22 @@ class MainActivity : BaseActivity(),ServiceConnection {
     }
 
     private fun playWithShare(){
-        val url = mySharePre.getString("YOUTUBE") ?: return
+        val url = mySharePre.getString("YOUTUBE")
+        if(url==null || url == "null"){
+            return
+        }
         mySharePre.remove("YOUTUBE")
-        val api = callApi.detail(token,url=url)
+        val api = callApi.detail(token,url=url.toString())
         RequiresApi.callApi(this,api){
             if(it==null || it.status != 200){
                 return@callApi
             }
             val item = it.data as LinkedTreeMap<*, *>
+
+            if(item["video_id"].toString()==""){
+                return@callApi
+            }
+
             val model = Video(
                 item["video_id"].toString(),
                 item["title"].toString(),
