@@ -1,6 +1,7 @@
 package org.youpip.app.service
 
 import android.content.Context
+import android.util.Log
 import android.util.SparseArray
 import androidx.core.util.forEach
 import at.huber.youtubeExtractor.VideoMeta
@@ -10,6 +11,7 @@ import at.huber.youtubeExtractor.YtFile
 class getVideo(context: Context, val callBack: (Array<String>) -> Unit) : YouTubeExtractor(context) {
     override fun onExtractionComplete(ytFiles: SparseArray<YtFile>?, videoMeta: VideoMeta?) =
         if (ytFiles != null) {
+            println("====>youpip${ytFiles}")
             var audioAndVideo = ""
             var audio = ""
             var video = ""
@@ -43,10 +45,11 @@ class getVideo(context: Context, val callBack: (Array<String>) -> Unit) : YouTub
                     println("====>youpip:hls:${item}:${ytFiles[item].url}")
                 }
             }
-
+            Log.i("YTB_DL","${audioAndVideo}  \n  ${video} \n  ${audio}")
             callBack(arrayOf(audioAndVideo,video,audio))
 
         } else {
+            Log.i("YTB_DL","FAIL!")
             callBack(arrayOf("","",""))
         }
 }

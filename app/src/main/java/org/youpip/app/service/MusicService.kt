@@ -65,17 +65,16 @@ class MusicService : Service() {
                 playPendingIntent
             )
         }
-
         notification.addAction(R.drawable.ic_baseline_close_24, "Close", exitPendingIntent)
-        notification.setStyle(
-            androidx.media.app.NotificationCompat.MediaStyle()
-                .setShowActionsInCompactView(3)
-                .setCancelButtonIntent(null)
-                .setMediaSession(mediaSession.sessionToken)
-        )
-
         if(android.os.Build.VERSION.SDK_INT > android.os.Build.VERSION_CODES.R){
+            notification.setStyle(
+                androidx.media.app.NotificationCompat.MediaStyle()
+                    .setShowActionsInCompactView(3)
+                    .setCancelButtonIntent(null)
+                    .setMediaSession(mediaSession.sessionToken)
+            )
             startForeground(3, notification.build())
         }
+
     }
 }

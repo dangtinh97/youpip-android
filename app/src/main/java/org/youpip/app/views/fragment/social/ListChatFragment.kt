@@ -90,7 +90,7 @@ class ListChatFragment : BaseFragment() {
         }
         customRecyclerView()
         loadData()
-        onMessageSocket()
+//        onMessageSocket()
         initScrollView()
     }
 

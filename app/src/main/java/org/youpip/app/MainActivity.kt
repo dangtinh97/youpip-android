@@ -13,7 +13,6 @@ import android.os.StrictMode
 import android.transition.ChangeBounds
 import android.transition.TransitionManager
 import android.util.DisplayMetrics
-import android.util.Log
 import android.view.*
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import android.view.inputmethod.InputMethodManager
@@ -30,8 +29,10 @@ import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.source.MediaSource
 import com.google.android.exoplayer2.source.MergingMediaSource
 import com.google.android.exoplayer2.source.ProgressiveMediaSource
+import com.google.android.exoplayer2.source.hls.HlsMediaSource
 import com.google.android.exoplayer2.ui.PlayerView
 import com.google.android.exoplayer2.upstream.DataSource
+import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
 import com.google.android.exoplayer2.upstream.DefaultHttpDataSource
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.bottomsheet.BottomSheetDialog
@@ -52,6 +53,7 @@ import org.youpip.app.network.SOCKET_URL
 import org.youpip.app.service.MusicService
 import org.youpip.app.service.getVideo
 import java.util.*
+import kotlin.collections.ArrayList
 import kotlin.system.exitProcess
 
 
@@ -66,8 +68,6 @@ class MainActivity : BaseActivity(),ServiceConnection {
     private lateinit var binding: ActivityMainBinding
     lateinit var navigationTabBottom: BottomNavigationView
     private lateinit var viewPagerMain: ViewPager2
-    private var positionTab: Int? = null
-
     private lateinit var playerView: PlayerView
     private var isPlay = false
     private var isFullScreen: Boolean = false
@@ -102,16 +102,20 @@ class MainActivity : BaseActivity(),ServiceConnection {
     private lateinit var adapter: ItemVideoMoreAdapter
     lateinit var btnOnlyAudio:ImageView
     lateinit var socket: Socket
-
     lateinit var dialogNotification: MessageActivityNotification
+
+    //05-16
+    var addVideoList:Boolean = false
+
+    private var listAdded = ArrayList<Video>()
+    private var videoIsLoaded:Boolean = false
+
     companion object {
         var videoP:Video? = null
         var musicService: MusicService? = null
         var modePiPEnable:Boolean = false
-        var newConfigMode:Configuration? = null
         lateinit var player: ExoPlayer
         var currentPositionMedia:Int = 0
-
     }
 
     override fun setViewBinding() {
@@ -144,20 +148,20 @@ class MainActivity : BaseActivity(),ServiceConnection {
         playWithShare()
     }
 
-    private fun playWithShare(){
+    private fun playWithShare() {
         val url = mySharePre.getString("YOUTUBE")
-        if(url==null || url == "null"){
+        if (url == null || url == "null") {
             return
         }
         mySharePre.remove("YOUTUBE")
-        val api = callApi.detail(token,url=url.toString())
-        RequiresApi.callApi(this,api){
-            if(it==null || it.status != 200){
+        val api = callApi.detail(token, url = url.toString())
+        RequiresApi.callApi(this, api) {
+            if (it == null || it.status != 200) {
                 return@callApi
             }
             val item = it.data as LinkedTreeMap<*, *>
 
-            if(item["video_id"].toString()==""){
+            if (item["video_id"].toString() == "") {
                 return@callApi
             }
 
@@ -171,7 +175,6 @@ class MainActivity : BaseActivity(),ServiceConnection {
                 item["chanel_url"].toString(),
                 item["time_text"].toString(),
             )
-            println("====>explay${model}")
             playVideo(model)
         }
     }
@@ -235,35 +238,66 @@ class MainActivity : BaseActivity(),ServiceConnection {
     }
 
     fun playVideo(videoPlay: Video? = null) {
-        permissionPiP = false
-        videoStart = false
-        playerView.visibility = View.INVISIBLE
-        titleVideoVertical.visibility = View.VISIBLE
-        showNavigationBottom(false)
-        setLayoutParamFullScreen()
-        if (videoIsSmall) {
-            smallVideo()
+        if(::video.isInitialized && videoPlay==video && videoIsLoaded){
+            if (videoIsSmall) {
+                smallVideo()
+            }
+            return;
         }
+
         if(videoPlay==null){
             return
         }
-        if(player.isPlaying && videoPlay.equals(video)){
-            return
-        }
-        player.stop()
-        currentPositionMedia = 0
 
+        resetLoadPlayer()
+        player.stop()
+        player.clearMediaItems();
+        listAdded = arrayListOf<Video>()
+        currentPositionMedia = 0
+        video = videoPlay
+        if(!videoPlay.video_id.contains("truyen-hinh")){
+            playWithYoutube(videoPlay)
+            suggestByVideoId(videoPlay.video_id)
+        }
+        if(videoPlay.video_id.contains("truyen-hinh")){
+            urlPlayVtv(videoPlay.video_id)
+        }
+        videoP = video
+        setInfo(video)
+    }
+
+    private fun urlPlayVtv(videoId:String) {
+        adapter.setData(arrayListOf())
+        loadImage(null,true)
+        val api = callApi.linkPlay(token,videoId)
+        RequiresApi.callApi(this,api){
+            if(it==null || it.status != 200){
+                alert("Hệ thống gián đoạn, vui lòng thử lại sau!")
+                return@callApi
+            }
+
+            val data = it.data as LinkedTreeMap<*, *>
+            val url = data["url"].toString()
+            val dataSourceFactory: DataSource.Factory =
+                DefaultDataSourceFactory(this, "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36")
+            val mediaItem: MediaItem = MediaItem.fromUri(url)
+            val source =  HlsMediaSource.Factory(dataSourceFactory).createMediaSource(mediaItem)
+            player.setMediaSource(source)
+            player.prepare()
+            player.play()
+            playerView.player = player
+        }
+    }
+
+    private fun playWithYoutube(videoPlay:Video){
+        listAdded.add(videoPlay)
         apiDetailVideo(videoPlay.video_id) {
             val all = it[0];
             val video = it[1];
             val audio = it[2];
             var play = false;
             if (video.isNotEmpty() && audio.isNotEmpty()) {
-                println("====>youpip-video-${video}")
-                println("====>youpip-audio-${audio}")
                 play = true
-
-
                 val dataSourceFactory: DataSource.Factory = DefaultHttpDataSource.Factory()
                 val videoSource: MediaSource =
                     ProgressiveMediaSource.Factory(dataSourceFactory)
@@ -274,38 +308,36 @@ class MainActivity : BaseActivity(),ServiceConnection {
                 player.setMediaSource(MergingMediaSource(videoSource, audioSource))
             }
             if (!play && all.isNotEmpty()) {
-                println("====>youpip-all-${all}")
                 play = true
                 val mediaItem: MediaItem = MediaItem.fromUri(all)
                 player.setMediaItem(mediaItem)
             }
-
             if (play) {
-                println("====>youpip-prepare")
                 player.prepare()
                 player.play()
                 playerView.player = player
+            }else{
+                alert("Không thể phát video: ${videoPlay.video_id}")
             }
         }
-
-        video = videoPlay
-        videoP = video
-        suggestByVideoId(videoPlay.video_id)
-        setInfo(video)
     }
 
     private fun apiDetailVideo(videoId:String,callback:(Array<String>) -> Unit){
+        saveRecentlyView(videoId)
+        val url = "https://youtube.com/watch?v=${videoId}"
+        getVideo(this) {
+            callback(it)
+        }.extract(url)
+    }
+
+    private fun saveRecentlyView(videoId:String)
+    {
         val api = callApi.findLink(token,videoId)
         RequiresApi.callApi(this,api){
             if(it==null || it.status != 200){
                 return@callApi
             }
         }
-        val url = "http://youtube.com/watch?v=${videoId}"
-        getVideo(this) {
-            callback(it)
-        }.extract(url)
-
     }
 
     private fun setLayoutParamFullScreen() {
@@ -350,8 +382,7 @@ class MainActivity : BaseActivity(),ServiceConnection {
         val intent = Intent(this,MusicService::class.java)
         bindService(intent,this, BIND_AUTO_CREATE)
         startService(intent)
-        connectSocket()
-//        testUrl()
+//        connectSocket()
     }
 
     private fun onCreateBaseVideo() {
@@ -406,15 +437,12 @@ class MainActivity : BaseActivity(),ServiceConnection {
 
                 when (playbackState) {
                     Player.STATE_ENDED -> {
-                        Log.i("EventListenerState", "Playback ended!")
                         player.playWhenReady = false
                     }
                     Player.STATE_READY -> {
-                        Log.i("EventListenerState", "Playback State Ready!")
                         loadImage(null, false)
                     }
                     Player.STATE_BUFFERING -> {
-                        Log.i("EventListenerState", "Playback buffering")
                         loadImage(null, true)
                     }
                     Player.STATE_IDLE -> {}
@@ -448,22 +476,22 @@ class MainActivity : BaseActivity(),ServiceConnection {
                     loadImage(null, false)
                 }
                 isPlay = isPlaying
+                if(isPlaying){
+                    if(!videoIsLoaded && !addVideoList){
+                        addVideoToList()
+                    }
+                    videoIsLoaded = true
+                }
             }
 
             override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
                 super.onMediaItemTransition(mediaItem, reason)
-                if(currentPositionMedia>0){
-                    val current: String? = mediaItem?.mediaId
-                    if(current != null && current.isNotEmpty()){
-                        video = listVideo[current.toInt()]
-                        setInfo(video)
-                        videoP = video
-                        addNextVideo()
-                    }
-                }
-                delay(1000){
-                    loadImage(null, false)
-                }
+                val current = player.currentMediaItemIndex;
+                video = listAdded[current]
+                saveRecentlyView(video.video_id)
+                setInfo(video)
+                videoP = video
+                addVideoToList()
             }
         })
     }
@@ -674,7 +702,6 @@ class MainActivity : BaseActivity(),ServiceConnection {
 
     private fun buildPip() {
         val actions = arrayListOf<RemoteAction>()
-
         if(!isPlay){
             actions.add(
                 buildActionRemote(
@@ -717,26 +744,31 @@ class MainActivity : BaseActivity(),ServiceConnection {
             val data = it.data as LinkedTreeMap<*, *>
             val list = data.get("list") as ArrayList<*>
             val dataItems = arrayListOf<Video>()
+            val dataItems2 = arrayListOf<Video>()
+            dataItems2.add(video)
             list.forEach { item->
                 item as LinkedTreeMap<*, *>
-                dataItems.add(
-                    Video(
-                        item.get("video_id").toString(),
-                        item.get("title").toString(),
-                        item.get("thumbnail").toString(),
-                        item.get("published_time").toString(),
-                        item.get("view_count_text").toString(),
-                        item.get("chanel_name").toString(),
-                        item.get("chanel_url").toString(),
-                        item.get("time_text").toString(),
-                    )
+                val model = Video(
+                    item.get("video_id").toString(),
+                    item.get("title").toString(),
+                    item.get("thumbnail").toString(),
+                    item.get("published_time").toString(),
+                    item.get("view_count_text").toString(),
+                    item.get("chanel_name").toString(),
+                    item.get("chanel_url").toString(),
+                    item.get("time_text").toString(),
                 )
+                dataItems.add(model)
+                dataItems2.add(model)
             }
-            listVideo = dataItems
             adapter.setData(dataItems)
-            addNextVideo()
+            listVideo = dataItems2
+            if(videoIsLoaded){
+                addVideoToList()
+            }
         }
     }
+
     private fun customRecyclerView(){
         val layoutManager = LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false)
         adapter = ItemVideoMoreAdapter{
@@ -744,41 +776,6 @@ class MainActivity : BaseActivity(),ServiceConnection {
         }
         recyclerView.layoutManager = layoutManager
         recyclerView.adapter = adapter
-    }
-
-    private fun addNextVideo() {
-        if (listVideo.size > currentPositionMedia) {
-            apiDetailVideo(listVideo[currentPositionMedia].video_id) {
-                val all = it[0];
-                val video = it[1];
-                val audio = it[2];
-                var play = false;
-                if (video.isNotEmpty() && audio.isNotEmpty()) {
-                    /* play = true
-                     val videoSource: MediaSource =
-                         ProgressiveMediaSource.Factory(DefaultDataSourceFactory(this))
-                             .createMediaSource(MediaItem.fromUri(video))
-                     val audioSource: MediaSource =
-                         ProgressiveMediaSource.Factory(DefaultDataSourceFactory(this))
-                             .createMediaSource(MediaItem.fromUri(audio))
-                     val source = MergingMediaSource(videoSource, audioSource)
-                     player.setMediaSource(source)
-                     Toast.makeText(this,"EEE",Toast.LENGTH_SHORT).show()*/
-                }
-                if (!play && all.isNotEmpty()) {
-                    play = true
-                    val mediaItem: MediaItem =
-                        MediaItem.Builder().setUri(all).setMediaId(currentPositionMedia.toString())
-                            .build()
-                    player.addMediaItem(mediaItem)
-                }
-
-                if (play) {
-                    player.prepare()
-                }
-                currentPositionMedia++
-            }
-        }
     }
 
     fun showNavigationBottom(show:Boolean){
@@ -828,7 +825,6 @@ class MainActivity : BaseActivity(),ServiceConnection {
                 }
             }
         }
-
         socket.connect()
         return
     }
@@ -846,10 +842,73 @@ class MainActivity : BaseActivity(),ServiceConnection {
     }
 
     private fun testUrl(){
-
         getVideo(this){
 
         }.extract("https://www.youtube.com/watch?v=u90pJLgWAqA")
     }
 
+    fun closeVideo()
+    {
+        if(player.isPlaying){
+            player.stop()
+        }
+        layoutVideo.visibility = View.GONE
+    }
+
+    private fun addVideoToList() {
+        if(mySharePre.getBoolean("PASS_REVIEW") || listVideo.isEmpty() || listVideo.size <= currentPositionMedia){
+            return;
+        }
+        addVideoList = true
+        currentPositionMedia++
+        val video:Video = listVideo[currentPositionMedia]
+        apiDetailVideo(video.video_id) {
+            val all = it[0];
+            val urlVideo = it[1];
+            val audio = it[2];
+            var play = false;
+            if (urlVideo.isNotEmpty() && audio.isNotEmpty()) {
+                listAdded.add(video)
+                play = true
+                val videoSource: MediaSource =
+                    ProgressiveMediaSource.Factory(DefaultDataSourceFactory(this))
+                        .createMediaSource(MediaItem.fromUri(urlVideo))
+                val audioSource: MediaSource =
+                    ProgressiveMediaSource.Factory(DefaultDataSourceFactory(this))
+                        .createMediaSource(MediaItem.fromUri(audio))
+                val source = MergingMediaSource(videoSource, audioSource)
+                player.addMediaSource(listAdded.size-1,source)
+            }
+
+            if (!play && all.isNotEmpty()) {
+                listAdded.add(video)
+                play = true
+                val mediaItem: MediaItem =
+                    MediaItem.Builder().setUri(all).setMediaId(listAdded.size.toString())
+                        .build()
+                player.addMediaItem(mediaItem)
+            }
+            if(play){
+                alert("Video tiếp theo: ${video.title}")
+            }else{
+                addVideoToList()
+            }
+        }
+    }
+
+    private fun resetLoadPlayer(){
+        currentPositionMedia = 0
+        videoIsLoaded = false
+        addVideoList = false
+        listVideo = emptyList<Video>()
+        permissionPiP = false
+        videoStart = false
+        playerView.visibility = View.INVISIBLE
+        titleVideoVertical.visibility = View.VISIBLE
+        showNavigationBottom(false)
+        setLayoutParamFullScreen()
+        if (videoIsSmall) {
+            smallVideo()
+        }
+    }
 }

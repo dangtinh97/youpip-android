@@ -149,6 +149,12 @@ interface ApiService {
         @Query("url") url: String
     ): Observable<BaseApi<Any>>
 
+    @GET("vtv-go/link-play")
+    fun linkPlay(
+        @Header("Authorization") token: String,
+        @Query("path") path: String
+    ): Observable<BaseApi<Any>>
+
     companion object{
         private val gson = GsonBuilder().setLenient().create()
         private var headerInterceptor:HeaderInterceptor = HeaderInterceptor()

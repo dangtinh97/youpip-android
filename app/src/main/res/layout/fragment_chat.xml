@@ -43,6 +43,23 @@
         android:layout_below="@+id/toolBar"
         android:layout_width="match_parent"
         android:layout_height="match_parent"/>
+    <ImageView
+        android:visibility="gone"
+        android:id="@+id/no_image"
+        android:src="@drawable/no_message"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"/>
+    <TextView
+        android:visibility="gone"
+        android:textColor="@color/gray_10"
+        android:id="@+id/sending"
+        android:paddingStart="@dimen/_10sdp"
+        android:paddingEnd="@dimen/_10sdp"
+        android:gravity="end"
+        android:layout_above="@id/layout_action"
+        android:text="dang gửi..."
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"/>
     <LinearLayout
         android:gravity="center_vertical"
         android:layout_marginTop="@dimen/_8sdp"
@@ -54,14 +71,13 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
         <EditText
-
             android:textColor="@color/white"
             android:maxLines="3"
             android:layout_weight="1"
             android:id="@+id/ip_chat"
             android:paddingHorizontal="@dimen/_10sdp"
             android:textColorHint="@color/gray_10"
-            android:hint="Nhắn tin"
+            android:hint="Soạn tin nhắn..."
             android:paddingVertical="@dimen/_6sdp"
             android:background="@drawable/radius_input_comment"
             android:layout_width="0dp"

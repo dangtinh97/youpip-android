@@ -32,7 +32,8 @@ class ChatFragment(val chatModel:ListChatModel) : BaseFragment() {
     private var isLoadMore:Boolean = false
     private lateinit var layoutManager:LinearLayoutManager
     private var lastOid:String? = null
-
+    private lateinit var noImage:ImageView
+    private lateinit var sending:TextView
     override fun onViewCreateBase(view: View, savedInstanceState: Bundle?) {
         mySharePre.saveString("SCREEN","ChatFragment")
         activity?.window?.setSoftInputMode(
@@ -47,7 +48,8 @@ class ChatFragment(val chatModel:ListChatModel) : BaseFragment() {
         ipChat = binding.ipChat
         recyclerView = binding.recyclerView
         onlineIcon = binding.online
-        joinRoom()
+        noImage = binding.noImage
+        sending = binding.sending
         btnBack.setOnClickListener {
             (mActivity as MainActivity).showKeyboard(false)
             showNextNoAddStack(ListChatFragment())
@@ -65,7 +67,8 @@ class ChatFragment(val chatModel:ListChatModel) : BaseFragment() {
         }
         customRecyclerView()
         loadData()
-        onListenerSocket()
+        //        joinRoom()
+//        onListenerSocket()
 
         initOnScroll()
     }
@@ -129,6 +132,7 @@ class ChatFragment(val chatModel:ListChatModel) : BaseFragment() {
 
     private fun sendMessage()
     {
+        noImage.visibility = View.GONE
         val content = ipChat.text.toString().trim()
         if(content==""){
             return
@@ -147,7 +151,7 @@ class ChatFragment(val chatModel:ListChatModel) : BaseFragment() {
         val obj = JSONObject()
         obj.put("room_oid",chatModel.roomOid);
         obj.put("content",content);
-        (mActivity as MainActivity).socket.emit(ESocket.Message.value,obj)
+//        (mActivity as MainActivity).socket.emit(ESocket.Message.value,obj)
     }
 
     private fun customRecyclerView(){
@@ -169,9 +173,11 @@ class ChatFragment(val chatModel:ListChatModel) : BaseFragment() {
     }
 
     private fun sendMessage(message: String) {
+        (mActivity as MainActivity).progressBar(false)
+        sending.visibility = View.VISIBLE
         val home = callApi.sendMessage(token, id = chatModel.roomOid, message = message)
         RequiresApi.callApi(mActivity.baseContext, home) {
-            (mActivity as MainActivity).progressBar(false)
+            sending.visibility = View.GONE
             if (it === null || it.status != 200) {
                 return@callApi
             }
@@ -214,7 +220,6 @@ class ChatFragment(val chatModel:ListChatModel) : BaseFragment() {
                     null
                 )
                 listChat.add(model)
-
             }
 
             if(listChat.size>0){
@@ -232,12 +237,17 @@ class ChatFragment(val chatModel:ListChatModel) : BaseFragment() {
                 adapter.setData(listChat)
             }
             isLoadMore = false
+            if(adapter.itemCount == 0){
+                noImage.visibility = View.VISIBLE
+            }else{
+                noImage.visibility = View.GONE
+            }
         }
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        (mActivity as MainActivity).socket.emit(ESocket.LeaveRoom.value,chatModel.roomOid)
+//        (mActivity as MainActivity).socket.emit(ESocket.LeaveRoom.value,chatModel.roomOid)
         mySharePre.remove("SCREEN")
     }
 }

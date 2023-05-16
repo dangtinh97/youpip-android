@@ -28,19 +28,24 @@ class HomeFragment : BaseFragment() {
     private lateinit var adapter: ItemVideoHomeAdapter
     private lateinit var recentlyView:TextView
     private lateinit var viewAll:TextView
+    private lateinit var btnShortVideo: TextView
     private lateinit var layoutManager:LinearLayoutManager
     private var isLoading:Boolean = false
     private var lastOid:String? = null
     private var typeView:String = "view_all"
     private var isLoadMore:Boolean = false
+    private lateinit var reels:ArrayList<Video>
+    private lateinit var btnVtv:TextView
     override fun onViewCreateBase(view: View, savedInstanceState: Bundle?) {
-
+        btnShortVideo.visibility = View.GONE
     }
 
     override fun onInitialized() {
         recyclerView = binding.listVideo
         recentlyView = binding.recentlyView
+        btnShortVideo = binding.shortVideo
         viewAll = binding.viewAll
+        btnVtv = binding.vtvOnline
         recyclerView.suppressLayout(true)
         customRecyclerView()
         loadData(typeView)
@@ -58,8 +63,6 @@ class HomeFragment : BaseFragment() {
 
                 if (!isLoading && typeView=="recently_view")
                 {
-                    //findLastCompletelyVisibleItemPostition() returns position of last fully visible view.
-                    ////It checks, fully visible view is the last one.
                     if (layoutManager.findLastCompletelyVisibleItemPosition() == adapter.itemCount - 1)
                     {
                         isLoadMore = true
@@ -75,10 +78,7 @@ class HomeFragment : BaseFragment() {
     {
         recentlyView.setOnClickListener {
             isLoading = true
-            recentlyView.setBackgroundResource(R.drawable.radius_30_white)
-            recentlyView.setTextColor(ContextCompat.getColor((mActivity as MainActivity).baseContext, R.color.black))
-            viewAll.setBackgroundResource(R.drawable.radius_30_black)
-            viewAll.setTextColor(ContextCompat.getColor((mActivity as MainActivity).baseContext, R.color.white))
+            changeIconTabView(recentlyView)
             typeView = "recently_view"
             lastOid = null
             loadData(typeView)
@@ -87,13 +87,36 @@ class HomeFragment : BaseFragment() {
         viewAll.setOnClickListener {
             isLoading = true
             lastOid = null
-            recentlyView.setBackgroundResource(R.drawable.radius_30_black)
-            recentlyView.setTextColor(ContextCompat.getColor((mActivity as MainActivity).baseContext, R.color.white))
-            viewAll.setBackgroundResource(R.drawable.radius_30_white)
-            viewAll.setTextColor(ContextCompat.getColor((mActivity as MainActivity).baseContext, R.color.black))
+            changeIconTabView(viewAll)
             typeView = "view_all"
             loadData(typeView)
         }
+
+        btnVtv.setOnClickListener {
+            isLoading = true
+            lastOid = null
+            typeView = "vtv_go"
+            loadData(typeView)
+            changeIconTabView(btnVtv)
+        }
+
+        btnShortVideo.setOnClickListener {
+            (mActivity as MainActivity).closeVideo()
+            (mActivity as MainActivity).showNavigationBottom(false)
+            showNextNoAddStack(ShortVideoFragment(reels))
+        }
+    }
+
+    private fun changeIconTabView(tv:TextView)
+    {
+        recentlyView.setBackgroundResource(R.drawable.radius_30_black)
+        recentlyView.setTextColor(ContextCompat.getColor((mActivity as MainActivity).baseContext, R.color.white))
+        viewAll.setBackgroundResource(R.drawable.radius_30_black)
+        viewAll.setTextColor(ContextCompat.getColor((mActivity as MainActivity).baseContext, R.color.white))
+        btnVtv.setBackgroundResource(R.drawable.radius_30_black)
+        btnVtv.setTextColor(ContextCompat.getColor((mActivity as MainActivity).baseContext, R.color.white))
+        tv.setBackgroundResource(R.drawable.radius_30_white)
+        tv.setTextColor(ContextCompat.getColor((mActivity as MainActivity).baseContext, R.color.black))
     }
 
     fun customRecyclerView(){
@@ -129,6 +152,7 @@ class HomeFragment : BaseFragment() {
     }
 
     private fun loadData(type:String){
+        btnShortVideo.visibility = View.GONE
         (mActivity as MainActivity).progressBar(true)
         val home = callApi.home(token,type,lastOid.toString())
         RequiresApi.callApi(mActivity.baseContext,home){
@@ -139,6 +163,28 @@ class HomeFragment : BaseFragment() {
             val data = it.data as LinkedTreeMap<*, *>
             val list = data["list"] as ArrayList<*>
             val dataItems = arrayListOf<Video>()
+            if(type==="view_all"){
+                val shorts = data["reels"] as ArrayList<*>
+                reels = arrayListOf<Video>()
+                shorts.forEach { item ->
+                    item as LinkedTreeMap<*, *>
+                    val model = Video(
+                        item.get("video_id").toString(),
+                        item.get("title").toString(),
+                        item.get("thumbnail").toString(),
+                        item.get("published_time").toString(),
+                        item.get("view_count_text").toString(),
+                        item.get("chanel_name").toString(),
+                        item.get("chanel_url").toString(),
+                        item.get("time_text").toString(),
+                    )
+                    reels.add(model)
+                }
+                if(reels.size>0){
+                    btnShortVideo.visibility = View.VISIBLE
+                }
+            }
+
             list.forEach { item->
                 item as LinkedTreeMap<*, *>
                 val model = Video(

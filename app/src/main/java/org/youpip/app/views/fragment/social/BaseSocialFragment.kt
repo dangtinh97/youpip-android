@@ -20,7 +20,6 @@ class BaseSocialFragment : BaseFragment() {
 
     override fun onInitialized() {
         showNextNoAddStack(FeedFragment())
-
     }
 
     override fun onCreateView(
